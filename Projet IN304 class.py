@@ -1,5 +1,6 @@
 import json as js
 import operator
+from textblob import TextBlob
 
 donnees = open('aitweets.json', 'r', encoding='UTF-8')
 data = [js.loads(line) for line in donnees]
@@ -17,6 +18,7 @@ class Tweet:
         Tweet.nb_tweets += 1
         tweet['Hashtags'] = []
         tweet['Mentions'] = []
+        tweet['Polarity'] = ''
         self.id = tweet['id']
         self.localisation = tweet['AuthorLocation']
         self.date = tweet['CreatedAt']
@@ -25,8 +27,10 @@ class Tweet:
         self.texte = tweet['TweetText']
         self.hashtag = tweet['Hashtags']
         self.mention = tweet['Mentions']
+        self.polarity = tweet['Polarity']
         self.extract_car('#')
         self.extract_car('@')
+        self.analyse_sentiment()
 
     def extract_car(self, car):
         """Fonction qui extrait les hashtags utilisés ou les utilisateurs mentionnés dans le tweet à partir d'une base
@@ -68,6 +72,15 @@ class Tweet:
                         break
             else:
                 break
+
+    def analyse_sentiment(self):
+        polarity = TextBlob(self.texte).sentiment.polarity
+        if polarity < 0:
+            self.polarity = 'Negative'
+        elif polarity == 0:
+            self.polarity = 'Neutral'
+        else:
+            self.polarity = 'Positive'
 
 
 liste_tweets = [Tweet(data[i]) for i in range(len(data))]
