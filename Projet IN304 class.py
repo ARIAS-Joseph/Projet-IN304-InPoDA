@@ -100,3 +100,5 @@ Tweet.user_mentioned = sorted(Tweet.user_mentioned.items(),
 print(Tweet.nb_tweets)
 print(Tweet.used_hashtag)
 print(Tweet.user_mentioned)
+print(top(Tweet.user_mentioned,5))
+print(nombre_hashtag(Tweet.used_hashtag,"#AI"))
