@@ -95,10 +95,14 @@ def top(liste,k):
             top = 'utilisateur mentionné'
         print(f"Top {i+1} {top} : {liste[i][0]} avec {liste[i][1]} occurence(s)")
 
-def nombre_hashtag(liste):
-    pass
+def nombre_hashtag(liste,hashtag):
+    for i in range(len(liste)):
+        if liste[i][0] == hashtag :
+            print(f"Le hashtag {hashtag} apparaît dans {liste[i][1]} publication(s)")
+
 
 print(Tweet.nb_tweets)
 print(Tweet.used_hashtag)
 print(Tweet.user_mentioned)
 print(top(Tweet.user_mentioned,5))
+print(nombre_hashtag(Tweet.used_hashtag,"#AI"))
