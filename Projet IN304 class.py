@@ -14,7 +14,7 @@ class Tweet:
     used_hashtag = {}
     user_mentioned = {}
 
-    def __init__(self, tweet: dict):
+    def __init__(self, tweet:dict):
         Tweet.nb_tweets += 1
         tweet['Hashtags'] = []
         tweet['Mentions'] = []
@@ -33,15 +33,8 @@ class Tweet:
         self.analyse_sentiment()
 
     def extract_car(self, car):
-        """Fonction qui extrait les hashtags utilisés ou les utilisateurs
-        mentionnés dans le tweet à partir d'une base de données et les ajoute
-        à la base de données
-
-        Parameters
-        ----------
-        car : str
-            Le caractère que l'on recherche (# si on cherche les hashtags et @
-            si on cherche les utilisateurs"
+        """Fonction qui extrait les hashtags utilisés ou les utilisateurs mentionnés dans le tweet à partir d'une base
+        de données et les ajoute à la base de données
         """
 
         txt = self.texte
@@ -65,8 +58,7 @@ class Tweet:
                             else:
                                 fin_car = j
                             break
-                        elif txt[j] != '_' and not txt[j].isalnum() \
-                                or txt[j] == '.':
+                        elif txt[j] != '_' and not txt[j].isalnum() or txt[j] == '.':
                             fin_car = j
                             break
                     nom_car = txt[index_car:fin_car]
@@ -92,10 +84,50 @@ class Tweet:
 
 
 liste_tweets = [Tweet(data[i]) for i in range(len(data))]
-Tweet.used_hashtag = sorted(Tweet.used_hashtag.items(),
-                            key=operator.itemgetter(1), reverse=True)
-Tweet.user_mentioned = sorted(Tweet.user_mentioned.items(),
-                              key=operator.itemgetter(1), reverse=True)
+Tweet.used_hashtag = sorted(Tweet.used_hashtag.items(), key=operator.itemgetter(1), reverse=True)
+Tweet.user_mentioned = sorted(Tweet.user_mentioned.items(), key=operator.itemgetter(1), reverse=True)
+
+
+def top(liste,k):
+    """Top k hashtags ou Top k utilisateurs mentionnés
+    
+    Fonction qui affiche les top k hashtags ou les tops k utilisateurs mentionnés
+
+    Paramètres
+    ----------
+    liste : list
+        liste des hashtags et leurs occurences ou liste des mentions d'utilisateurs et leurs occurences
+    k : int
+        les k hashtags ou utilisateurs qui reviennent le plus 
+    
+    """
+    
+    for i in range(0,k):
+        if liste[i][0][0]== '#':
+            top = 'hashtag'
+        elif liste[i][0][0] == '@':
+            top = 'utilisateur mentionné'
+        print(f"Top {i+1} {top} : {liste[i][0]} avec {liste[i][1]} occurence(s)")
+
+
+def nombre_hashtag(liste,hashtag):
+    """Nombre de publications par hashtag
+
+    Fonction qui affiche le nombre de publications pour un hashtag donné
+
+    Paramètres 
+    ----------
+    liste : list
+        liste des hashtags
+    hashtag : str
+        nom du hashtag que l'on veur compter
+
+    """
+
+    for i in range(len(liste)):
+        if liste[i][0] == hashtag :
+            print(f"Le hashtag {hashtag} apparaît dans {liste[i][1]} publication(s)")
+
 
 print(Tweet.nb_tweets)
 print(Tweet.used_hashtag)
