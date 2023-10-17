@@ -14,7 +14,7 @@ class Tweet:
     used_hashtag = {}
     user_mentioned = {}
 
-    def __init__(self, tweet=dict):
+    def __init__(self, tweet: dict):
         Tweet.nb_tweets += 1
         tweet['Hashtags'] = []
         tweet['Mentions'] = []
@@ -35,6 +35,11 @@ class Tweet:
     def extract_car(self, car):
         """Fonction qui extrait les hashtags utilisés ou les utilisateurs mentionnés dans le tweet à partir d'une base
         de données et les ajoute à la base de données
+
+        Parameters
+        ----------
+        car : str
+            Le caractère que l'on recherche (# si on cherche les hashtags et @ si on cherche les utilisateurs"
         """
 
         txt = self.texte
