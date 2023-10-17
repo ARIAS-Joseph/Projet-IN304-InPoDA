@@ -33,13 +33,15 @@ class Tweet:
         self.analyse_sentiment()
 
     def extract_car(self, car):
-        """Fonction qui extrait les hashtags utilisés ou les utilisateurs mentionnés dans le tweet à partir d'une base
-        de données et les ajoute à la base de données
+        """Fonction qui extrait les hashtags utilisés ou les utilisateurs
+        mentionnés dans le tweet à partir d'une base de données et les ajoute
+        à la base de données
 
         Parameters
         ----------
         car : str
-            Le caractère que l'on recherche (# si on cherche les hashtags et @ si on cherche les utilisateurs"
+            Le caractère que l'on recherche (# si on cherche les hashtags et @
+            si on cherche les utilisateurs"
         """
 
         txt = self.texte
@@ -63,7 +65,8 @@ class Tweet:
                             else:
                                 fin_car = j
                             break
-                        elif txt[j] != '_' and not txt[j].isalnum() or txt[j] == '.':
+                        elif txt[j] != '_' and not txt[j].isalnum() \
+                                or txt[j] == '.':
                             fin_car = j
                             break
                     nom_car = txt[index_car:fin_car]
@@ -89,8 +92,10 @@ class Tweet:
 
 
 liste_tweets = [Tweet(data[i]) for i in range(len(data))]
-Tweet.used_hashtag = sorted(Tweet.used_hashtag.items(), key=operator.itemgetter(1), reverse=True)
-Tweet.user_mentioned = sorted(Tweet.user_mentioned.items(), key=operator.itemgetter(1), reverse=True)
+Tweet.used_hashtag = sorted(Tweet.used_hashtag.items(),
+                            key=operator.itemgetter(1), reverse=True)
+Tweet.user_mentioned = sorted(Tweet.user_mentioned.items(),
+                              key=operator.itemgetter(1), reverse=True)
 
 print(Tweet.nb_tweets)
 print(Tweet.used_hashtag)
