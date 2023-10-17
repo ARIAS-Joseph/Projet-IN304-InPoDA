@@ -87,6 +87,7 @@ liste_tweets = [Tweet(data[i]) for i in range(len(data))]
 Tweet.used_hashtag = sorted(Tweet.used_hashtag.items(), key=operator.itemgetter(1), reverse=True)
 Tweet.user_mentioned = sorted(Tweet.user_mentioned.items(), key=operator.itemgetter(1), reverse=True)
 
+
 def top(liste,k):
     for i in range(0,k):
         if liste[i][0][0]== '#':
@@ -94,6 +95,7 @@ def top(liste,k):
         elif liste[i][0][0] == '@':
             top = 'utilisateur mentionné'
         print(f"Top {i+1} {top} : {liste[i][0]} avec {liste[i][1]} occurence(s)")
+
 
 def nombre_hashtag(liste,hashtag):
     for i in range(len(liste)):
