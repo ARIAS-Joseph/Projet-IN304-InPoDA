@@ -13,7 +13,7 @@ class Tweet:
     used_hashtag = {}
     user_mentioned = {}
 
-    def __init__(self, tweet: dict):
+    def __init__(self, tweet:dict):
         Tweet.nb_tweets += 1
         tweet['Hashtags'] = []
         tweet['Mentions'] = []
@@ -64,8 +64,7 @@ class Tweet:
                             else:
                                 fin_car = j
                             break
-                        elif txt[j] != '_' and not txt[j].isalnum() \
-                                or txt[j] == '.':
+                        elif txt[j] != '_' and not txt[j].isalnum() or txt[j] == '.':
                             fin_car = j
                             break
                     nom_car = txt[index_car:fin_car]
@@ -107,9 +106,11 @@ def top(liste, k):
     for i in range(0, k):
         if liste[i][0][0] == '#':
             top = 'hashtag'
+            mention = 'occurrence'
         elif liste[i][0][0] == '@':
             top = 'utilisateur mentionné'
-        print(f"Top {i + 1} {top} : {liste[i][0]} avec {len(liste[i][1])} occurrence{'s' if len(liste[i][1]) > 1 else ''}")
+            mention = 'mention'
+        print(f"Top {i + 1} {top} : {liste[i][0]} avec {len(liste[i][1])} {mention}{'s' if len(liste[i][1]) > 1 else ''}")
 
 
 def nombre_hashtag(liste, hashtag):
@@ -132,6 +133,7 @@ def nombre_hashtag(liste, hashtag):
 
 
 liste_tweets = [Tweet(data[i]) for i in range(len(data))]
+
 Tweet.used_hashtag = sorted(Tweet.used_hashtag.items(),
                             key=lambda item: len(item[1]), reverse=True)
 Tweet.user_mentioned = sorted(Tweet.user_mentioned.items(),
