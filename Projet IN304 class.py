@@ -1,22 +1,38 @@
 import json as js
-import operator
 from textblob import TextBlob
+import spacy
+import random
 
 donnees = open('aitweets.json', 'r', encoding='UTF-8')
 data = [js.loads(line) for line in donnees]
-
 donnees.close()
+
+# Noms d'utilisateurs qui seront ajoutés aux tweets afin de mieux répondre aux questions du projet étant donné
+# qu'aucun nom d'utilisateur n'est fourni
+users_names = [*['@The Fiend'] * 18, *['@Bray Wyatt'] * 66, *['@Shinsuke Nakamura'] * 11, *['@Cory'] * 20, '@Chumlee',
+               '@Linkenb',
+               '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100, *['@Paula_Piccard'] * 50,
+               *['@nigewillson'] * 25,
+               *['@machinelearnTec'] * 15, 'Karl_Marx', *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant',
+               '@machinelearnflx', '@SpirosMargaris', *['@Datascience__'] * 30, *['@Charles_Henry'] * 38,
+               *['@UEYvelines'] * 78,
+               *['@union_etudiante_'] * 99]
+
+for i in range(len(data)):
+    data[i]['Author'] = random.choice(users_names)
 
 
 class Tweet:
     nb_tweets = 0
     used_hashtag = {}
     user_mentioned = {}
+    tweets_of_users = {}
 
-    def __init__(self, tweet:dict):
+    def __init__(self, tweet: dict):
         Tweet.nb_tweets += 1
         tweet['Hashtags'] = []
         tweet['Mentions'] = []
+        tweet['Topics'] = []
         tweet['Polarity'] = ''
         self.id = tweet['id']
         self.localisation = tweet['AuthorLocation']
@@ -27,11 +43,19 @@ class Tweet:
         self.hashtag = tweet['Hashtags']
         self.mention = tweet['Mentions']
         self.polarity = tweet['Polarity']
+        self.topics = tweet['Topics']
+        self.author = tweet['Author']
         self.extract_car('#')
         self.extract_car('@')
         self.analyse_sentiment()
+        self.extract_topics()
+        self.list_tweet_by_author()
+        Tweet.used_hashtag_trie = sorted(Tweet.used_hashtag.items(),
+                                         key=lambda item: len(item[1]), reverse=True)
+        Tweet.user_mentioned_trie = sorted(Tweet.user_mentioned.items(),
+                                           key=lambda item: len(item[1]), reverse=True)
 
-    def extract_car(self, car):
+    def extract_car(self, car: str):
         """Fonction qui extrait les hashtags utilisés ou les utilisateurs
         mentionnés dans le tweet à partir d'une base de données et les ajoute
         à la base de données
@@ -88,8 +112,20 @@ class Tweet:
         else:
             self.polarity = 'Positive'
 
+    def extract_topics(self):
+        pass
 
-def top(liste, k):
+    def list_tweet_by_author(self):
+        try:
+            Tweet.tweets_of_users[self.author].append(self)
+        except KeyError:
+            Tweet.tweets_of_users[self.author] = [self]
+
+
+liste_tweets = [Tweet(data[i]) for i in range(len(data))]
+
+
+def top(liste: list, k: int):
     """Top k hashtags ou Top k utilisateurs mentionnés
 
     Fonction qui affiche les top k hashtags ou les tops k utilisateurs mentionnés
@@ -104,42 +140,47 @@ def top(liste, k):
     """
 
     for i in range(0, k):
-        if liste[i][0][0] == '#':
-            top = 'hashtag'
-            mention = 'occurrence'
-        elif liste[i][0][0] == '@':
-            top = 'utilisateur mentionné'
-            mention = 'mention'
-        print(f"Top {i + 1} {top} : {liste[i][0]} avec {len(liste[i][1])} {mention}{'s' if len(liste[i][1]) > 1 else ''}")
+        try:
+            if liste[i][0][0] == '#':
+                top = 'hashtag'
+                mention = 'occurrence'
+            elif liste[i][0][0] == '@':
+                top = 'utilisateur mentionné'
+                mention = 'mention'
+            print(
+                f"Top {i + 1} {top} : {liste[i][0]} avec {len(liste[i][1])} {mention}"
+                f"{'s' if len(liste[i][1]) > 1 else ''}")
+        except IndexError:
+            pass
 
 
-def nombre_hashtag(liste, hashtag):
+def nombre_hashtag(hashtag: str):
     """Nombre de publications par hashtag
 
     Fonction qui affiche le nombre de publications pour un hashtag donné
 
     Paramètres
     ----------
-    liste : list
-        liste des hashtags
     hashtag : str
         nom du hashtag que l'on veut compter
 
     """
+    if hashtag[0] != '#':
+        hashtag = '#' + hashtag
+    dic_hashtag = Tweet.used_hashtag[hashtag]
+    print(f"Le hashtag {hashtag} apparaît dans {len(dic_hashtag)} publication"
+          f"{'s' if len(dic_hashtag) > 1 else ''}")
 
-    for i in range(len(liste)):
-        if liste[i][0] == hashtag:
-            print(f"Le hashtag {hashtag} apparaît dans {len(liste[i][1])} publication{'s' if len(liste[i][1]) > 1 else ''}")
+
+def publication_author(author: str):
+    if author[0] != '@':
+        author = '@' + author
+    for tweet in Tweet.tweets_of_users[author]:
+        print(tweet.texte)
 
 
-liste_tweets = [Tweet(data[i]) for i in range(len(data))]
-
-Tweet.used_hashtag = sorted(Tweet.used_hashtag.items(),
-                            key=lambda item: len(item[1]), reverse=True)
-Tweet.user_mentioned = sorted(Tweet.user_mentioned.items(),
-                              key=lambda item: len(item[1]), reverse=True)
-
-print(Tweet.nb_tweets)
-print(top(Tweet.user_mentioned, 10))
-print(top(Tweet.used_hashtag, 10))
-print(nombre_hashtag(Tweet.used_hashtag, "#AI"))
+"""print(Tweet.nb_tweets)
+print(top(Tweet.user_mentioned_trie, 10))
+print(top(Tweet.used_hashtag_trie, 10))
+print(nombre_hashtag("#AI"))"""
+print(publication_author('The Fiend'))
