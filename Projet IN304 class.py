@@ -3,30 +3,13 @@ from textblob import TextBlob
 import spacy
 import random
 
-donnees = open('aitweets.json', 'r', encoding='UTF-8')
-data = [js.loads(line) for line in donnees]
-donnees.close()
-
-# Noms d'utilisateurs qui seront ajoutés aux tweets afin de mieux répondre aux questions du projet étant donné
-# qu'aucun nom d'utilisateur n'est fourni
-users_names = [*['@The Fiend'] * 18, *['@Bray Wyatt'] * 66, *['@Shinsuke Nakamura'] * 11, *['@Cory'] * 20, '@Chumlee',
-               '@Linkenb',
-               '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100, *['@Paula_Piccard'] * 50,
-               *['@nigewillson'] * 25,
-               *['@machinelearnTec'] * 15, 'Karl_Marx', *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant',
-               '@machinelearnflx', '@SpirosMargaris', *['@Datascience__'] * 30, *['@Charles_Henry'] * 38,
-               *['@UEYvelines'] * 78,
-               *['@union_etudiante_'] * 99]
-
-for i in range(len(data)):
-    data[i]['Author'] = random.choice(users_names)
-
 
 class Tweet:
     nb_tweets = 0
     used_hashtag = {}
     user_mentioned = {}
     tweets_of_users = {}
+    all_tweets = []
 
     def __init__(self, tweet: dict):
         Tweet.nb_tweets += 1
@@ -54,6 +37,29 @@ class Tweet:
                                          key=lambda item: len(item[1]), reverse=True)
         Tweet.user_mentioned_trie = sorted(Tweet.user_mentioned.items(),
                                            key=lambda item: len(item[1]), reverse=True)
+        Tweet.all_tweets.append(self)
+
+    @classmethod
+    def instantiate_from_file(cls):
+        donnees = open('aitweets.json', 'r', encoding='UTF-8')
+        liste_tweets = [js.loads(line) for line in donnees]
+
+        # Noms d'utilisateurs qui seront ajoutés aux tweets afin de mieux répondre aux questions du projet étant donné
+        # qu'aucun nom d'utilisateur n'est fourni
+        users_names = [*['@The Fiend'] * 18, *['@Bray Wyatt'] * 66, *['@Shinsuke Nakamura'] * 11, *['@Cory'] * 20,
+                       '@Chumlee', '@Linkenb', '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100,
+                       *['@Paula_Piccard'] * 50, *['@nigewillson'] * 25, *['@machinelearnTec'] * 15, 'Karl_Marx',
+                       *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant', '@machinelearnflx', '@SpirosMargaris',
+                       *['@Datascience__'] * 30, *['@Charles_Henry'] * 38, *['@UEYvelines'] * 78,
+                       *['@union_etudiante_'] * 99]
+
+        for i in range(len(liste_tweets)):
+            liste_tweets[i]['Author'] = random.choice(users_names)
+
+        for tweet in liste_tweets:
+            Tweet(tweet)
+
+        donnees.close()
 
     def extract_car(self, car: str):
         """Fonction qui extrait les hashtags utilisés ou les utilisateurs
@@ -95,9 +101,9 @@ class Tweet:
                     if nom_car != car:
                         liste_car.append(nom_car)
                         if nom_car in used_car:
-                            used_car[nom_car].append(self.id)
+                            used_car[nom_car].append(self)
                         else:
-                            used_car[nom_car] = [self.id]
+                            used_car[nom_car] = [self]
                     else:
                         break
             else:
@@ -120,9 +126,6 @@ class Tweet:
             Tweet.tweets_of_users[self.author].append(self)
         except KeyError:
             Tweet.tweets_of_users[self.author] = [self]
-
-
-liste_tweets = [Tweet(data[i]) for i in range(len(data))]
 
 
 def top(liste: list, k: int):
@@ -179,8 +182,10 @@ def publication_author(author: str):
         print(tweet.texte)
 
 
-"""print(Tweet.nb_tweets)
+Tweet.instantiate_from_file()
+print(Tweet.nb_tweets)
 print(top(Tweet.user_mentioned_trie, 10))
 print(top(Tweet.used_hashtag_trie, 10))
-print(nombre_hashtag("#AI"))"""
-print(publication_author('The Fiend'))
+print(nombre_hashtag("#AI"))
+"""print(publication_author('The Fiend'))
+"""
