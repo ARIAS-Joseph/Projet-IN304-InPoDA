@@ -1,25 +1,28 @@
 import json as js
 from textblob import TextBlob
-import spacy
 import random
+import matplotlib.pyplot as plt
 
 
 class Tweet:
-    nb_tweets = 0
     used_hashtag = {}  # dictionnaire avec le nom du hashtag en clé et la liste des tweets contenant le hashtag en
     # valeur
     user_mentioned = {}  # dictionnaire avec le nom de l'utilisateur en clé et la liste des tweets mentionnant
     # l'utilisateur en valeur
     tweets_of_users = {}  # dictionnaire avec le nom de l'utilisateur en clé et la liste des tweets de l'utilisateur en
     # valeur
+    tweets_polarity = [0, 0, 0]  # avec en indice 0 le nombre de tweets négatifs, en indice 1 le nombre de tweets
+    # neutres et en indice 2 le nombre de tweets positifs
+    tweets_objectivity = [0, 0]  # avec en indice 0 le nombre de tweets objectifs et en indice 1 le nombre de tweets
+    # subjectifs
     all_tweets = []  # liste de tous les tweets
 
     def __init__(self, tweet: dict):
-        Tweet.nb_tweets += 1
         tweet['Hashtags'] = []
         tweet['Mentions'] = []
         tweet['Topics'] = []
         tweet['Polarity'] = ''
+        tweet['Subjectivity'] = ''
         self.id = tweet['id']
         self.localisation = tweet['AuthorLocation']
         self.date = tweet['CreatedAt']
@@ -29,6 +32,7 @@ class Tweet:
         self.hashtag = tweet['Hashtags']
         self.mention = tweet['Mentions']
         self.polarity = tweet['Polarity']
+        self.subjectivity = tweet['Subjectivity']
         self.topics = tweet['Topics']
         self.author = tweet['Author']
         self.extract_car('#')  # extraction des hashtags utilisés dans le tweet
@@ -43,6 +47,9 @@ class Tweet:
                                            key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
         # utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mention de
         # l'utilisateur
+        Tweet.tweets_of_users_trie = sorted(Tweet.tweets_of_users.items(),
+                                           key=lambda item: len(item[1]), reverse=True) # création d'une liste des
+        # utilisateurs triée par ordre décroissant du nombre de tweets de l'utilisateur
         Tweet.all_tweets.append(self)
 
     @classmethod
@@ -57,10 +64,10 @@ class Tweet:
         # rendre l'analyse des données plus intéressante)
         users_names = [*['@The Fiend'] * 18, *['@Bray Wyatt'] * 66, *['@Shinsuke Nakamura'] * 11, *['@Cory'] * 20,
                        '@Chumlee', '@Linkenb', '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100,
-                       *['@Paula_Piccard'] * 50, *['@nigewillson'] * 25, *['@machinelearnTec'] * 15, 'Karl_Marx',
+                       *['@Paula_Piccard'] * 50, *['@nigewillson'] * 25, *['@machinelearnTec'] * 15, '@Karl_Marx',
                        *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant', '@machinelearnflx', '@SpirosMargaris',
                        *['@Datascience__'] * 30, *['@Charles_Henry'] * 38, *['@UEYvelines'] * 78,
-                       *['@union_etudiante_'] * 99]
+                       *['@unionetudiante_'] * 99, *['@la_classe_ouvriere'] * 16, *['@OGCNice'] * 6, '@Utah']
 
         for i in range(len(liste_tweets)):
             liste_tweets[i]['Author'] = random.choice(users_names)
@@ -89,6 +96,8 @@ class Tweet:
             liste_car = self.hashtag
             used_car = Tweet.used_hashtag
             nom_car = 'Hashtags'
+        else:
+            pass
         fin_car = 0  # indice du dernier caractère du hashtag/utilisateur que l'on veut extraire
         while True:
             if car in txt[fin_car:]:
@@ -123,13 +132,23 @@ class Tweet:
     def analyse_sentiment(self):
         """Fonction qui analyse le sentiment d'un tweet (négatif, neutre ou positif)
         """
-        polarity = TextBlob(self.texte).sentiment.polarity
-        if polarity < 0:
+        sentiment = TextBlob(self.texte).sentiment
+        if sentiment[0] < 0:
             self.polarity = 'Negative'
-        elif polarity == 0:
+            Tweet.tweets_polarity[0] += 1
+        elif sentiment[0] == 0:
             self.polarity = 'Neutral'
-        else:
+            Tweet.tweets_polarity[1] += 1
+        elif sentiment[0] > 0:
             self.polarity = 'Positive'
+            Tweet.tweets_polarity[2] += 1
+
+        if sentiment[1] <= 0.5:
+            self.subjectivity = 'Objective'
+            Tweet.tweets_objectivity[0] += 1
+        elif sentiment[1] >= 0.5:
+            self.subjectivity = 'Subjectif'
+            Tweet.tweets_objectivity[1] += 1
 
     def extract_topics(self):
         pass
@@ -156,20 +175,43 @@ def top(liste: list, k: int):
         les k hashtags ou utilisateurs qui reviennent le plus
 
     """
-
+    nom = []
+    occurence = []
     for i in range(0, k):
         try:
-            if liste[i][0][0] == '#':
+            if liste == Tweet.tweets_of_users_trie:
+                top = 'utilisateur'
+                mention = 'tweet'
+                xlabel = 'Utilisateurs'
+                ylabel = 'Nombre de tweets'
+            elif liste[i][0][0] == '#':
                 top = 'hashtag'
                 mention = 'occurrence'
+                xlabel = 'Hashtags'
+                ylabel = 'Nombre d\'utilisations'
             elif liste[i][0][0] == '@':
                 top = 'utilisateur mentionné'
                 mention = 'mention'
+                xlabel = 'Utlisateurs mentionnés'
+                ylabel = 'Nombre de mentions'
+            else:
+                pass
             print(
                 f"Top {i + 1} {top} : {liste[i][0]} avec {len(liste[i][1])} {mention}"
                 f"{'s' if len(liste[i][1]) > 1 else ''}")
+            nom.append(liste[i][0])
+            occurence.append(len(liste[i][1]))
         except IndexError:
             pass
+    ax = plt.bar(nom, occurence)
+    for bar in ax:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom')
+    plt.xticks(rotation=45)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(f'Top {k} des {top}s')
+    plt.show()
 
 
 def nombre_hashtag(hashtag: str):
@@ -206,10 +248,33 @@ def publication_author(author: str):
         print(tweet.texte)
 
 
+def show_pie_chart(liste: list):
+    if liste == Tweet.tweets_polarity:
+        labels = 'Négatif', 'Neutre', 'Positif'
+        sizes = Tweet.tweets_polarity
+        colors = ['lightcoral', 'silver', 'cornflowerblue']
+        title = 'Représentation de la polarité des tweets'
+    elif liste == Tweet.tweets_objectivity:
+        labels = 'Objectif', 'Subjectif'
+        sizes = Tweet.tweets_objectivity
+        colors = ['lightcoral', 'cornflowerblue']
+        title = 'Représentation de l\'objectivité des tweets'
+    else:
+        pass
+
+    fig, ax = plt.subplots()
+    ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors)
+    plt.title(title)
+    plt.show()
+
+
 Tweet.instantiate_from_file()
-print(Tweet.nb_tweets)
-print(top(Tweet.user_mentioned_trie, 10))
-print(top(Tweet.used_hashtag_trie, 10))
+print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
+print(top(Tweet.user_mentioned_trie, 3))
+print(top(Tweet.used_hashtag_trie, 3))
+print(top(Tweet.tweets_of_users_trie, 3))
 print(nombre_hashtag("#AI"))
-"""print(publication_author('The Fiend'))
-"""
+print(publication_author('Chumlee'))
+show_pie_chart(Tweet.tweets_polarity)
+show_pie_chart(Tweet.tweets_objectivity)
+
