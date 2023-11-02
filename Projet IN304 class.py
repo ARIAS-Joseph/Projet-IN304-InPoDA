@@ -2,6 +2,9 @@ import json as js
 from textblob import TextBlob
 import random
 import matplotlib.pyplot as plt
+import folium
+from collections import Counter
+from geopy.geocoders import Nominatim
 
 
 class Tweet:
@@ -15,6 +18,7 @@ class Tweet:
     # neutres et en indice 2 le nombre de tweets positifs
     tweets_objectivity = [0, 0]  # avec en indice 0 le nombre de tweets objectifs et en indice 1 le nombre de tweets
     # subjectifs
+    tweets_localisation = []  # liste de toutes les localisations des tweets
     all_tweets = []  # liste de tous les tweets
 
     def __init__(self, tweet: dict):
@@ -48,8 +52,10 @@ class Tweet:
         # utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mention de
         # l'utilisateur
         Tweet.tweets_of_users_trie = sorted(Tweet.tweets_of_users.items(),
-                                           key=lambda item: len(item[1]), reverse=True) # création d'une liste des
+                                            key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
         # utilisateurs triée par ordre décroissant du nombre de tweets de l'utilisateur
+        if self.localisation != "":
+            Tweet.tweets_localisation.append(self.localisation)
         Tweet.all_tweets.append(self)
 
     @classmethod
@@ -176,7 +182,7 @@ def top(liste: list, k: int):
 
     """
     nom = []
-    occurence = []
+    occurrence = []
     for i in range(0, k):
         try:
             if liste == Tweet.tweets_of_users_trie:
@@ -200,10 +206,10 @@ def top(liste: list, k: int):
                 f"Top {i + 1} {top} : {liste[i][0]} avec {len(liste[i][1])} {mention}"
                 f"{'s' if len(liste[i][1]) > 1 else ''}")
             nom.append(liste[i][0])
-            occurence.append(len(liste[i][1]))
+            occurrence.append(len(liste[i][1]))
         except IndexError:
             pass
-    ax = plt.bar(nom, occurence)
+    ax = plt.bar(nom, occurrence)
     for bar in ax:
         height = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom')
@@ -244,8 +250,11 @@ def publication_author(author: str):
     """
     if author[0] != '@':
         author = '@' + author
-    for tweet in Tweet.tweets_of_users[author]:
-        print(tweet.texte)
+    try:
+        for tweet in Tweet.tweets_of_users[author]:
+            print(tweet.texte)
+    except KeyError:
+        print('Cet utilisateur n\'a pas tweeté')
 
 
 def show_pie_chart(liste: list):
@@ -268,13 +277,66 @@ def show_pie_chart(liste: list):
     plt.show()
 
 
+def world_map():
+    # Géocodez les lieux en coordonnées géographiques (latitude et longitude)
+    geolocator = Nominatim(user_agent="tweet_geocoder")
+    tweet_coordinates = {}
+    i = 1
+    for location in Tweet.tweets_localisation:
+        try:
+            location = location.strip()
+            if location not in tweet_coordinates:
+                location_data = geolocator.geocode(location)
+                if location_data:
+                    tweet_coordinates[location] = (location_data.latitude, location_data.longitude, location)
+        except Exception:
+            pass
+        print(i, '/', len(Tweet.tweets_localisation))
+        i += 1
+    # Créez une carte avec Folium
+    tweet_counts = Counter(Tweet.tweets_localisation)
+    m = folium.Map()
+    # Ajoutez des marqueurs pour chaque lieu de tweet
+    for location, count in tweet_counts.items():
+        if location in tweet_coordinates:
+            lat, lon = tweet_coordinates[location][:2]
+            """folium.CircleMarker(
+                location=[lat, lon],
+                radius=count * 10,  # Ajustez la taille des marqueurs en fonction du nombre de tweets
+                color='black',
+                fill=True,
+                fill_color='red',
+                fill_opacity=0.3,
+            ).add_to(m)"""
+            popup_content = f'<p><b>{tweet_coordinates[location][2]}</b></p>' \
+                            f'<p>{count} tweet{"s" if count > 1 else ""}' \
+                            f' posté{"s" if count > 1 else ""} depuis cet endroit</p>'  # utilisation de html qui
+            # est nécessaire étant donné que le fichier contenant la carte est en html
+            popup = folium.Popup(popup_content, parse_html=False, max_width=100)
+
+            """icon = folium.CustomIcon(
+                icon_image,
+                icon_size=(38, 95),
+                icon_anchor=(22, 94),
+                shadow_image=shadow_image,
+                shadow_size=(50, 64),
+                shadow_anchor=(4, 62),
+                popup_anchor=(-3, -76),
+            )"""
+            folium.Marker(location=(lat, lon), popup=popup).add_to(m)
+
+    # Affichez la carte
+    m.save('tweet_map.html')  # Enregistrez la carte au format HTML
+
+
 Tweet.instantiate_from_file()
-print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
+
+"""print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
 print(top(Tweet.user_mentioned_trie, 3))
 print(top(Tweet.used_hashtag_trie, 3))
 print(top(Tweet.tweets_of_users_trie, 3))
 print(nombre_hashtag("#AI"))
 print(publication_author('Chumlee'))
 show_pie_chart(Tweet.tweets_polarity)
-show_pie_chart(Tweet.tweets_objectivity)
-
+show_pie_chart(Tweet.tweets_objectivity)"""
+world_map()  # cette fonction demande beaucoup de temps à s'exécuter ! La console affiche l'avancement de cette dernière
