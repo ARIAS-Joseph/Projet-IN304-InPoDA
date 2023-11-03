@@ -19,6 +19,7 @@ class Tweet:
     tweets_objectivity = [0, 0]  # avec en indice 0 le nombre de tweets objectifs et en indice 1 le nombre de tweets
     # subjectifs
     tweets_localisation = []  # liste de toutes les localisations des tweets
+    tweets_time = {}
     all_tweets = []  # liste de tous les tweets
 
     def __init__(self, tweet: dict):
@@ -56,6 +57,10 @@ class Tweet:
         # utilisateurs triée par ordre décroissant du nombre de tweets de l'utilisateur
         if self.localisation != "":
             Tweet.tweets_localisation.append(self.localisation)
+        if self.date[11:13] in Tweet.tweets_time:
+            Tweet.tweets_time[self.date[11:13]] += 1
+        else:
+            Tweet.tweets_time[self.date[11:13]] = 1
         Tweet.all_tweets.append(self)
 
     @classmethod
@@ -278,7 +283,7 @@ def show_pie_chart(liste: list):
 
 
 def world_map():
-    # Géocodez les lieux en coordonnées géographiques (latitude et longitude)
+
     geolocator = Nominatim(user_agent="tweet_geocoder")
     tweet_coordinates = {}
     i = 1
@@ -293,10 +298,10 @@ def world_map():
             pass
         print(i, '/', len(Tweet.tweets_localisation))
         i += 1
-    # Créez une carte avec Folium
+
     tweet_counts = Counter(Tweet.tweets_localisation)
     m = folium.Map()
-    # Ajoutez des marqueurs pour chaque lieu de tweet
+
     for location, count in tweet_counts.items():
         if location in tweet_coordinates:
             lat, lon = tweet_coordinates[location][:2]
@@ -325,8 +330,21 @@ def world_map():
             )"""
             folium.Marker(location=(lat, lon), popup=popup).add_to(m)
 
-    # Affichez la carte
-    m.save('tweet_map.html')  # Enregistrez la carte au format HTML
+    m.save('tweet_map.html')
+
+
+def visualize_tweet_time():
+    time = list(Tweet.tweets_time.keys())
+    nb_tweets = list(Tweet.tweets_time.values())
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(time, nb_tweets, color='skyblue', marker='+')
+    plt.xlabel('Heure')
+    plt.ylabel('Nombre de Tweets')
+    plt.title('Nombre de Tweets par Heure')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
 
 
 Tweet.instantiate_from_file()
@@ -338,5 +356,7 @@ print(top(Tweet.tweets_of_users_trie, 3))
 print(nombre_hashtag("#AI"))
 print(publication_author('Chumlee'))
 show_pie_chart(Tweet.tweets_polarity)
-show_pie_chart(Tweet.tweets_objectivity)"""
+show_pie_chart(Tweet.tweets_objectivity
 world_map()  # cette fonction demande beaucoup de temps à s'exécuter ! La console affiche l'avancement de cette dernière
+"""
+visualize_tweet_time()
