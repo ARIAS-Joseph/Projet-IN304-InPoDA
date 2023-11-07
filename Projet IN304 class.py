@@ -19,6 +19,7 @@ import plotly
 import plotly.graph_objs as go
 import tkinter as tk
 from tkinter import filedialog
+from PIL import Image, ImageTk
 
 
 class Tweet:
@@ -361,8 +362,12 @@ world_map()"""""  # cette fonction demande beaucoup de temps pour s'exécuter et
 
 window = tk.Tk()
 window.title('InPoDa')
+path = "logo_twitter.png"
+load = Image.open(path)
+render = ImageTk.PhotoImage(load)
+window.iconphoto(False, render)
 label_file = tk.Label(window, text='Choisir un fichier contenant des tweets au format json', font=('helvetica', '20'),
-                      fg='blue')
+                      fg='#00acee')
 bouton_file = tk.Button(window, text='Choisir le fichier', command=Tweet.instantiate_from_file)
 label_file.grid()
 bouton_file.grid()
