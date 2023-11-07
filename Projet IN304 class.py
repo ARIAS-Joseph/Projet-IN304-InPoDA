@@ -10,7 +10,9 @@ from geopy.geocoders import Nominatim
 import regex as re
 import plotly
 import plotly.graph_objs as go
-
+import tkinter as tk
+from tkinter import *
+from tkinter import filedialog
 
 class Tweet:
     used_hashtag = {}  # dictionnaire avec le nom du hashtag en clé et la liste des tweets contenant le hashtag en
@@ -69,11 +71,15 @@ class Tweet:
             Tweet.tweets_time[self.date[11:13]] = 1
         Tweet.all_tweets.append(self)
 
+def open_file():
+    filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
+    file = open(filepath,'r',encoding='UTF-8')
+
     @classmethod
     def instantiate_from_file(cls):
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
-        donnees = open('aitweets.json', 'r', encoding='UTF-8')
+        donnees = file
         liste_tweets = [js.loads(line) for line in donnees]
 
         # Noms d'utilisateurs qui seront ajoutés aux tweets afin de mieux répondre aux questions du projet étant donné
@@ -323,10 +329,10 @@ def visualize_tweet_time():
     plt.tight_layout()
     plt.show()
 
+"""
+Tweet.instantiate_from_file()"""
 
-Tweet.instantiate_from_file()
-
-print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
+"""""print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
 print(top(Tweet.user_mentioned_trie, 15))
 print(top(Tweet.used_hashtag_trie, 15))
 print(top(Tweet.tweets_of_users_trie, 15))
@@ -334,7 +340,15 @@ print(nombre_hashtag("#AI"))
 print(publication_author('Chumlee'))
 show_pie_chart(Tweet.tweets_polarity)
 show_pie_chart(Tweet.tweets_objectivity)
-world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La console
+world_map()"""""  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La console
 # affiche l'avancement de cette dernière
 
-visualize_tweet_time()
+"""visualize_tweet_time()"""
+
+window = tk.Tk()
+window.title('InPoDa')
+label_file = tk.Label(window, text = 'Choisir un fichier contenant des tweets au format json', font = ('helvetica', '30'), fg = 'blue')
+bouton_file = tk.Button(window, text = 'Choisir le fichier', command = open_file)
+label_file.grid()
+bouton_file.grid()
+window.mainloop()
