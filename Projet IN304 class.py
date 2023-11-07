@@ -349,14 +349,14 @@ def visualize_tweet_time():
 
 Tweet.instantiate_from_file()
 
-"""print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
+print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
 print(top(Tweet.user_mentioned_trie, 3))
 print(top(Tweet.used_hashtag_trie, 3))
 print(top(Tweet.tweets_of_users_trie, 3))
 print(nombre_hashtag("#AI"))
 print(publication_author('Chumlee'))
 show_pie_chart(Tweet.tweets_polarity)
-show_pie_chart(Tweet.tweets_objectivity
+show_pie_chart(Tweet.tweets_objectivity)
 world_map()  # cette fonction demande beaucoup de temps à s'exécuter ! La console affiche l'avancement de cette dernière
-"""
+
 visualize_tweet_time()
