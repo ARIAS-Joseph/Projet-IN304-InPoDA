@@ -76,9 +76,9 @@ class Tweet:
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
         filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
-        print(filepath)
-        while not filepath.endswith(".json"):
-            filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
+        while not filepath.endswith(".json") and filepath != '' :
+            filepath = filedialog.askopenfilename(title='OUVRIR UN FICHIER JSON')
+            
 
         file = open(filepath,'r',encoding='UTF-8')
         donnees = file
