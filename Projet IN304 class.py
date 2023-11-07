@@ -1,6 +1,13 @@
+__author__ = "Mathilde GAUTEUR, Joseph ARIAS"
+__copyright__ = "Copyright 2023, Projet InPoDa"
+__credits__ = ["Mathilde GAUTEUR", "Joseph ARIAS"]
+__license__ = "GPL"
+__maintainer__ = "Joseph ARIAS"
+__email__ = "joseph.arias@ens.uvsq.fr"
+__status__ = "Development"
+
 import json as js
 import time
-
 from textblob import TextBlob
 import random
 import matplotlib.pyplot as plt
@@ -11,8 +18,8 @@ import regex as re
 import plotly
 import plotly.graph_objs as go
 import tkinter as tk
-from tkinter import *
 from tkinter import filedialog
+
 
 class Tweet:
     used_hashtag = {}  # dictionnaire avec le nom du hashtag en clé et la liste des tweets contenant le hashtag en
@@ -78,7 +85,6 @@ class Tweet:
         filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
         while not filepath.endswith(".json") and filepath != '' :
             filepath = filedialog.askopenfilename(title='OUVRIR UN FICHIER JSON')
-            
 
         file = open(filepath,'r',encoding='UTF-8')
         donnees = file
@@ -348,15 +354,16 @@ print(nombre_hashtag("#AI"))
 print(publication_author('Chumlee'))
 show_pie_chart(Tweet.tweets_polarity)
 show_pie_chart(Tweet.tweets_objectivity)
-world_map()"""""  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La console
-# affiche l'avancement de cette dernière
+world_map()"""""  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
+# console affiche l'avancement de cette dernière
 
 """visualize_tweet_time()"""
 
 window = tk.Tk()
 window.title('InPoDa')
-label_file = tk.Label(window, text = 'Choisir un fichier contenant des tweets au format json', font = ('helvetica', '20'), fg = 'blue')
-bouton_file = tk.Button(window, text = 'Choisir le fichier', command = Tweet.instantiate_from_file)
+label_file = tk.Label(window, text='Choisir un fichier contenant des tweets au format json', font=('helvetica', '20'),
+                      fg='blue')
+bouton_file = tk.Button(window, text='Choisir le fichier', command=Tweet.instantiate_from_file)
 label_file.grid()
 bouton_file.grid()
 window.mainloop()
