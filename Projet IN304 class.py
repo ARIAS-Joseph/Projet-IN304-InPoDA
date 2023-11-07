@@ -76,6 +76,10 @@ class Tweet:
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
         filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
+        print(filepath)
+        while not filepath.endswith(".json"):
+            filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
+
         file = open(filepath,'r',encoding='UTF-8')
         donnees = file
         liste_tweets = [js.loads(line) for line in donnees]
@@ -84,12 +88,12 @@ class Tweet:
         # qu'aucun nom d'utilisateur n'est fourni (certains noms sont plus susceptibles d'apparaître souvent afin de
         # rendre l'analyse des données plus intéressante)
         users_names = [*['@The Fiend'] * 18, *['@Bray Wyatt'] * 66, *['@Shinsuke Nakamura'] * 11, *['@Cory'] * 20,
-                       '@Chumlee', '@Liklenb', '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100,
-                       *['@Paula_Piccard'] * 50, *['@nigewillson'] * 25, *['@machinelearnTec'] * 15, '@Karl_Marx',
-                       *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant', '@machinelearnflx', '@SpirosMargaris',
-                       *['@Datascience__'] * 30, *['@Charles_Henry'] * 38, *['@UEYvelines'] * 78,
-                       *['@unionetudiante_'] * 99, *['@la_classe_ouvriere'] * 16, *['@ogcnice'] * 6, '@Utah',
-                       '@chachat']
+                    '@Chumlee', '@Liklenb', '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100,
+                    *['@Paula_Piccard'] * 50, *['@nigewillson'] * 25, *['@machinelearnTec'] * 15, '@Karl_Marx',
+                    *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant', '@machinelearnflx', '@SpirosMargaris',
+                    *['@Datascience__'] * 30, *['@Charles_Henry'] * 38, *['@UEYvelines'] * 78,
+                    *['@unionetudiante_'] * 99, *['@la_classe_ouvriere'] * 16, *['@ogcnice'] * 6, '@Utah',
+                    '@chachat']
 
         for i in range(len(liste_tweets)):
             liste_tweets[i]['Author'] = random.choice(users_names)
@@ -98,6 +102,12 @@ class Tweet:
             Tweet(tweet)
 
         donnees.close()
+
+        bouton_file.destroy()
+        label_file.destroy()
+
+        bouton_analyser = tk.Button(text='Analyser')
+        bouton_analyser.grid()
 
     def extract_car(self, car: str):
         """Fonction qui extrait les hashtags utilisés ou les utilisateurs mentionnés dans le tweet à partir d'une base
@@ -345,7 +355,7 @@ world_map()"""""  # cette fonction demande beaucoup de temps pour s'exécuter et
 
 window = tk.Tk()
 window.title('InPoDa')
-label_file = tk.Label(window, text = 'Choisir un fichier contenant des tweets au format json', font = ('helvetica', '30'), fg = 'blue')
+label_file = tk.Label(window, text = 'Choisir un fichier contenant des tweets au format json', font = ('helvetica', '20'), fg = 'blue')
 bouton_file = tk.Button(window, text = 'Choisir le fichier', command = Tweet.instantiate_from_file)
 label_file.grid()
 bouton_file.grid()
