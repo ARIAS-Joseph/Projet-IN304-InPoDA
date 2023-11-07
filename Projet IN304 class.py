@@ -1,10 +1,15 @@
 import json as js
+import time
+
 from textblob import TextBlob
 import random
 import matplotlib.pyplot as plt
 import folium
 from collections import Counter
 from geopy.geocoders import Nominatim
+import regex as re
+import plotly
+import plotly.graph_objs as go
 
 
 class Tweet:
@@ -19,7 +24,8 @@ class Tweet:
     tweets_objectivity = [0, 0]  # avec en indice 0 le nombre de tweets objectifs et en indice 1 le nombre de tweets
     # subjectifs
     tweets_localisation = []  # liste de toutes les localisations des tweets
-    tweets_time = {}
+    tweets_time = {str(i).zfill(2): 0 for i in range(24)}  # création des clés dans le dictionnaire dans l'ordre
+    # croissant pour améliorer le graphique de la fonction visualize_time
     all_tweets = []  # liste de tous les tweets
 
     def __init__(self, tweet: dict):
@@ -42,7 +48,7 @@ class Tweet:
         self.author = tweet['Author']
         self.extract_car('#')  # extraction des hashtags utilisés dans le tweet
         self.extract_car('@')  # extraction des utilisateurs mentionnés dans le tweet
-        self.analyse_sentiment()  # analyse du sentiment du tweet (négatif, neutre ou positif)
+        self.analyse_sentiment()  # analyse du sentiment du tweet (négatif, neutre ou positif) et la subjectivité
         self.extract_topics()  # extraction des topics du tweet
         self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du tweet
         Tweet.used_hashtag_trie = sorted(Tweet.used_hashtag.items(),
@@ -74,11 +80,12 @@ class Tweet:
         # qu'aucun nom d'utilisateur n'est fourni (certains noms sont plus susceptibles d'apparaître souvent afin de
         # rendre l'analyse des données plus intéressante)
         users_names = [*['@The Fiend'] * 18, *['@Bray Wyatt'] * 66, *['@Shinsuke Nakamura'] * 11, *['@Cory'] * 20,
-                       '@Chumlee', '@Linkenb', '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100,
+                       '@Chumlee', '@Liklenb', '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100,
                        *['@Paula_Piccard'] * 50, *['@nigewillson'] * 25, *['@machinelearnTec'] * 15, '@Karl_Marx',
                        *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant', '@machinelearnflx', '@SpirosMargaris',
                        *['@Datascience__'] * 30, *['@Charles_Henry'] * 38, *['@UEYvelines'] * 78,
-                       *['@unionetudiante_'] * 99, *['@la_classe_ouvriere'] * 16, *['@OGCNice'] * 6, '@Utah']
+                       *['@unionetudiante_'] * 99, *['@la_classe_ouvriere'] * 16, *['@ogcnice'] * 6, '@Utah',
+                       '@chachat']
 
         for i in range(len(liste_tweets)):
             liste_tweets[i]['Author'] = random.choice(users_names)
@@ -102,43 +109,19 @@ class Tweet:
         if car == "@":  # si on veut extraire les utilisateurs mentionnés
             liste_car = self.mention
             used_car = Tweet.user_mentioned
-            nom_car = 'Mention'
+            nom_car = re.findall(r'@\w+', txt)
         elif car == "#":  # si on veut extraire les hashtags utilisés
             liste_car = self.hashtag
             used_car = Tweet.used_hashtag
-            nom_car = 'Hashtags'
+            nom_car = re.findall(r'#\w+', txt)
         else:
             pass
-        fin_car = 0  # indice du dernier caractère du hashtag/utilisateur que l'on veut extraire
-        while True:
-            if car in txt[fin_car:]:
-                index_car = txt.find(car, fin_car)  # indice du premier caractère du hashtag/utilisateur que l'on veut
-                # extraire
-                if index_car != len(txt) - 1:  # certains tweets étant coupés, on n'extrait pas les hashtags/utilisateur
-                    # si ces derniers ne constituent uniquement le caractère '@' our '#'
-                    for j in range(index_car + 1, len(txt)):
-                        if j == len(txt) - 1:
-                            if txt[j].isalnum() or txt[j] == '_':
-                                fin_car = j + 1
-                            else:
-                                fin_car = j
-                            break
-                        elif txt[j] != '_' and not txt[j].isalnum() or txt[j] == '.':
-                            fin_car = j
-                            break
-                    nom_car = txt[index_car:fin_car]
-                    if nom_car != car:
-                        liste_car.append(nom_car)
-                        if nom_car in used_car:
-                            used_car[nom_car].append(self)
-                        else:
-                            used_car[nom_car] = [self]
-                    else:
-                        break
-                else:
-                    break
+        for element in nom_car:
+            liste_car.append(element)
+            if element in used_car:
+                used_car[element].append(self)
             else:
-                break
+                used_car[element] = [self]
 
     def analyse_sentiment(self):
         """Fonction qui analyse le sentiment d'un tweet (négatif, neutre ou positif)
@@ -283,8 +266,8 @@ def show_pie_chart(liste: list):
 
 
 def world_map():
-
-    geolocator = Nominatim(user_agent="tweet_geocoder")
+    debut = time.time()
+    geolocator = Nominatim(user_agent="Géolocalisation_tweets")
     tweet_coordinates = {}
     i = 1
     for location in Tweet.tweets_localisation:
@@ -305,32 +288,24 @@ def world_map():
     for location, count in tweet_counts.items():
         if location in tweet_coordinates:
             lat, lon = tweet_coordinates[location][:2]
-            """folium.CircleMarker(
-                location=[lat, lon],
-                radius=count * 10,  # Ajustez la taille des marqueurs en fonction du nombre de tweets
-                color='black',
-                fill=True,
-                fill_color='red',
-                fill_opacity=0.3,
-            ).add_to(m)"""
             popup_content = f'<p><b>{tweet_coordinates[location][2]}</b></p>' \
                             f'<p>{count} tweet{"s" if count > 1 else ""}' \
                             f' posté{"s" if count > 1 else ""} depuis cet endroit</p>'  # utilisation de html qui
             # est nécessaire étant donné que le fichier contenant la carte est en html
             popup = folium.Popup(popup_content, parse_html=False, max_width=100)
-
-            """icon = folium.CustomIcon(
+            """icon_image = "icone_twitter.png"
+            coeff = 1 + count*0.05
+            icon = folium.CustomIcon(
                 icon_image,
-                icon_size=(38, 95),
-                icon_anchor=(22, 94),
-                shadow_image=shadow_image,
-                shadow_size=(50, 64),
-                shadow_anchor=(4, 62),
-                popup_anchor=(-3, -76),
+                icon_size=(50*coeff, 50*coeff),
+                icon_anchor=(0, 0),
+                popup_anchor=(0, 0)
             )"""
             folium.Marker(location=(lat, lon), popup=popup).add_to(m)
 
     m.save('tweet_map.html')
+    fin = time.time()
+    print('temps final:', fin-debut)
 
 
 def visualize_tweet_time():
@@ -338,25 +313,28 @@ def visualize_tweet_time():
     nb_tweets = list(Tweet.tweets_time.values())
 
     plt.figure(figsize=(10, 6))
-    plt.plot(time, nb_tweets, color='skyblue', marker='+')
+    plt.plot(time, nb_tweets, color='skyblue', marker='o', linewidth=3, markeredgewidth=10)
     plt.xlabel('Heure')
     plt.ylabel('Nombre de Tweets')
     plt.title('Nombre de Tweets par Heure')
-    plt.xticks(rotation=45)
+    plt.xticks(time)
+    plt.yticks(range(min(nb_tweets)-1, max(nb_tweets) + 1, 2))
+    plt.grid(True)
     plt.tight_layout()
     plt.show()
 
 
 Tweet.instantiate_from_file()
 
-"""print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
-print(top(Tweet.user_mentioned_trie, 3))
-print(top(Tweet.used_hashtag_trie, 3))
-print(top(Tweet.tweets_of_users_trie, 3))
+print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
+print(top(Tweet.user_mentioned_trie, 15))
+print(top(Tweet.used_hashtag_trie, 15))
+print(top(Tweet.tweets_of_users_trie, 15))
 print(nombre_hashtag("#AI"))
 print(publication_author('Chumlee'))
 show_pie_chart(Tweet.tweets_polarity)
-show_pie_chart(Tweet.tweets_objectivity
-world_map()  # cette fonction demande beaucoup de temps à s'exécuter ! La console affiche l'avancement de cette dernière
-"""
+show_pie_chart(Tweet.tweets_objectivity)
+world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La console
+# affiche l'avancement de cette dernière
+
 visualize_tweet_time()
