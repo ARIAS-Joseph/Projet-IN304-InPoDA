@@ -71,14 +71,12 @@ class Tweet:
             Tweet.tweets_time[self.date[11:13]] = 1
         Tweet.all_tweets.append(self)
 
-def open_file():
-    filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
-    file = open(filepath,'r',encoding='UTF-8')
-
     @classmethod
     def instantiate_from_file(cls):
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
+        filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
+        file = open(filepath,'r',encoding='UTF-8')
         donnees = file
         liste_tweets = [js.loads(line) for line in donnees]
 
@@ -348,7 +346,7 @@ world_map()"""""  # cette fonction demande beaucoup de temps pour s'exécuter et
 window = tk.Tk()
 window.title('InPoDa')
 label_file = tk.Label(window, text = 'Choisir un fichier contenant des tweets au format json', font = ('helvetica', '30'), fg = 'blue')
-bouton_file = tk.Button(window, text = 'Choisir le fichier', command = open_file)
+bouton_file = tk.Button(window, text = 'Choisir le fichier', command = Tweet.instantiate_from_file)
 label_file.grid()
 bouton_file.grid()
 window.mainloop()
