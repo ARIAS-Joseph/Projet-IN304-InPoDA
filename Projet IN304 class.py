@@ -20,6 +20,8 @@ import plotly.graph_objs as go
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
+import gradio as gr
+import emoji
 
 
 class Tweet:
@@ -39,56 +41,68 @@ class Tweet:
     all_tweets = []  # liste de tous les tweets
 
     def __init__(self, tweet: dict):
-        tweet['Hashtags'] = []
-        tweet['Mentions'] = []
-        tweet['Topics'] = []
-        tweet['Polarity'] = ''
-        tweet['Subjectivity'] = ''
-        self.id = tweet['id']
-        self.localisation = tweet['AuthorLocation']
-        self.date = tweet['CreatedAt']
-        self.rt = tweet['RetweetCount']
-        self.langue = tweet['TweetLanguage']
-        self.texte = tweet['TweetText']
-        self.hashtag = tweet['Hashtags']
-        self.mention = tweet['Mentions']
-        self.polarity = tweet['Polarity']
-        self.subjectivity = tweet['Subjectivity']
-        self.topics = tweet['Topics']
-        self.author = tweet['Author']
-        self.extract_car('#')  # extraction des hashtags utilisés dans le tweet
-        self.extract_car('@')  # extraction des utilisateurs mentionnés dans le tweet
-        self.analyse_sentiment()  # analyse du sentiment du tweet (négatif, neutre ou positif) et la subjectivité
-        self.extract_topics()  # extraction des topics du tweet
-        self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du tweet
-        Tweet.used_hashtag_trie = sorted(Tweet.used_hashtag.items(),
-                                         key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
-        # hashtags présents dans les tweets analysés triée par ordre décroissant du nombre d'apparition du hashtag
-        Tweet.user_mentioned_trie = sorted(Tweet.user_mentioned.items(),
-                                           key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
-        # utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mention de
-        # l'utilisateur
-        Tweet.tweets_of_users_trie = sorted(Tweet.tweets_of_users.items(),
-                                            key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
-        # utilisateurs triée par ordre décroissant du nombre de tweets de l'utilisateur
-        if self.localisation != "":
-            Tweet.tweets_localisation.append(self.localisation)
-        if self.date[11:13] in Tweet.tweets_time:
-            Tweet.tweets_time[self.date[11:13]] += 1
+
+        if not isinstance(tweet, dict):
+            print(f'Un élément n\'est pas un dictionnaire et n\'a donc pas pu être analysé: {tweet}')
         else:
-            Tweet.tweets_time[self.date[11:13]] = 1
-        Tweet.all_tweets.append(self)
+            required_keys = ['id', 'AuthorLocation', 'CreatedAt', 'RetweetCount', 'TweetLanguage', 'TweetText']
+            missing_keys = [key for key in required_keys if key not in required_keys]
+            if missing_keys:
+                print(f"Attention : Le dictionnaire ne contient pas toutes les clés requises. Clé(s) manquante(s):"
+                      f"{missing_keys}")
+            else:
+                tweet['Hashtags'] = []
+                tweet['Mentions'] = []
+                tweet['Topics'] = []
+                tweet['Polarity'] = ''
+                tweet['Subjectivity'] = ''
+                self.id = tweet['id']
+                self.localisation = tweet['AuthorLocation']
+                self.date = tweet['CreatedAt']
+                self.rt = tweet['RetweetCount']
+                self.langue = tweet['TweetLanguage']
+                self.texte = tweet['TweetText']
+                self.hashtag = tweet['Hashtags']
+                self.mention = tweet['Mentions']
+                self.polarity = tweet['Polarity']
+                self.subjectivity = tweet['Subjectivity']
+                self.topics = tweet['Topics']
+                self.author = tweet['Author']
+                self.extract_car('#')  # extraction des hashtags utilisés dans le tweet
+                self.extract_car('@')  # extraction des utilisateurs mentionnés dans le tweet
+                self.analyse_sentiment()  # analyse du sentiment du tweet (négatif, neutre ou positif) et la subjectivité
+                self.extract_topics()  # extraction des topics du tweet
+                self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du tweet
+                Tweet.used_hashtag_trie = sorted(Tweet.used_hashtag.items(),
+                                                 key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
+                # hashtags présents dans les tweets analysés triée par ordre décroissant du nombre d'apparition du hashtag
+                Tweet.user_mentioned_trie = sorted(Tweet.user_mentioned.items(),
+                                                   key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
+                # utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mention de
+                # l'utilisateur
+                Tweet.tweets_of_users_trie = sorted(Tweet.tweets_of_users.items(),
+                                                    key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
+                # utilisateurs triée par ordre décroissant du nombre de tweets de l'utilisateur
+                if self.localisation != "":
+                    Tweet.tweets_localisation.append(self.localisation)
+                if self.date[11:13] in Tweet.tweets_time:
+                    Tweet.tweets_time[self.date[11:13]] += 1
+                else:
+                    Tweet.tweets_time[self.date[11:13]] = 1
+                Tweet.all_tweets.append(self)
 
     @classmethod
-    def instantiate_from_file(cls):
+    def instantiate_from_file(cls, test=0):
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
-        filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
-        while not filepath.endswith(".json") and filepath != '' :
-            filepath = filedialog.askopenfilename(title='OUVRIR UN FICHIER JSON')
+        if test == 1:
+            filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
+            while not filepath.endswith(".json") and filepath != '' :
+                filepath = filedialog.askopenfilename(title='OUVRIR UN FICHIER JSON')
+        else:
+            filepath = 'aitweets.json'
 
-        file = open(filepath,'r',encoding='UTF-8')
-        donnees = file
+        donnees = open(filepath, 'r', encoding='UTF-8')
         liste_tweets = [js.loads(line) for line in donnees]
 
         # Noms d'utilisateurs qui seront ajoutés aux tweets afin de mieux répondre aux questions du projet étant donné
@@ -105,16 +119,41 @@ class Tweet:
         for i in range(len(liste_tweets)):
             liste_tweets[i]['Author'] = random.choice(users_names)
 
+        file = Tweet.fill_zone_atterrissage(filepath, liste_tweets)
+        donnees = open(file, 'r', encoding='UTF-8')
+        liste_tweets = [js.loads(line) for line in donnees]
         for tweet in liste_tweets:
-            Tweet(tweet)
+            try:
+                Tweet(tweet)
+            except Exception:
+                print('La structure du tweet est incorrecte')
 
         donnees.close()
 
-        bouton_file.destroy()
-        label_file.destroy()
+        if test == 1:
+            bouton_file.destroy()
+            label_file.destroy()
 
-        bouton_analyser = tk.Button(text='Analyser')
-        bouton_analyser.grid()
+            bouton_analyser = tk.Button(text='Analyser')
+            bouton_analyser.grid()
+
+    @staticmethod
+    def fill_zone_atterrissage(filepath, liste_tweets):
+        """Remplit la zone d'atterrissage avec tous les objets tweets de la liste de tweets."""
+        new_name = re.match(r'([^\.]+)', filepath)[1]
+        Tweet.reset_zone_atterrissage(new_name)
+        file = open(f'zone_atterrissage_{new_name}.json', 'a')
+        for tweet in liste_tweets:
+            tweet['TweetText'] = emoji.demojize(tweet['TweetText'])  # on supprime les emojis du tweet
+            js.dump(tweet, file)
+            file.write('\n')
+        file.close()
+        return f'zone_atterrissage_{new_name}.json'
+
+    @staticmethod
+    def reset_zone_atterrissage(name):
+        """Supprime tout le text du fichier zone_atterissage.txt."""
+        open(f'zone_atterrissage_{name}.json', "w").close()
 
     def extract_car(self, car: str):
         """Fonction qui extrait les hashtags utilisés ou les utilisateurs mentionnés dans le tweet à partir d'une base
@@ -344,8 +383,10 @@ def visualize_tweet_time():
     plt.tight_layout()
     plt.show()
 
-"""
-Tweet.instantiate_from_file()"""
+
+tweet1 = Tweet('ouais')
+
+Tweet.instantiate_from_file()
 
 print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
 print(top(Tweet.user_mentioned_trie, 15))
@@ -358,7 +399,7 @@ show_pie_chart(Tweet.tweets_objectivity)
 """world_map() # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
 # console affiche l'avancement de cette dernière"""
 
-"""visualize_tweet_time()"""
+visualize_tweet_time()
 
 window = tk.Tk()
 window.title('InPoDa')
