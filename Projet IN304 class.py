@@ -20,7 +20,6 @@ import plotly.graph_objs as go
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
-import gradio as gr
 import emoji
 
 
@@ -71,19 +70,22 @@ class Tweet:
                 self.author = tweet['Author']
                 self.extract_car('#')  # extraction des hashtags utilisés dans le tweet
                 self.extract_car('@')  # extraction des utilisateurs mentionnés dans le tweet
-                self.analyse_sentiment()  # analyse du sentiment du tweet (négatif, neutre ou positif) et la subjectivité
+                self.analyse_sentiment()  # analyse du sentiment du tweet (négatif, neutre ou positif) et la
+                # subjectivité
                 self.extract_topics()  # extraction des topics du tweet
-                self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du tweet
+                self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du
+                # tweet
                 Tweet.used_hashtag_trie = sorted(Tweet.used_hashtag.items(),
-                                                 key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
-                # hashtags présents dans les tweets analysés triée par ordre décroissant du nombre d'apparition du hashtag
+                                                 key=lambda item: len(item[1]), reverse=True)  # création d'une liste
+                # des hashtags présents dans les tweets analysés triée par ordre décroissant du nombre d'apparitions du
+                # hashtag
                 Tweet.user_mentioned_trie = sorted(Tweet.user_mentioned.items(),
-                                                   key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
-                # utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mention de
-                # l'utilisateur
+                                                   key=lambda item: len(item[1]), reverse=True)  # création d'une liste
+                # des utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mentions
+                # de l'utilisateur
                 Tweet.tweets_of_users_trie = sorted(Tweet.tweets_of_users.items(),
-                                                    key=lambda item: len(item[1]), reverse=True)  # création d'une liste des
-                # utilisateurs triée par ordre décroissant du nombre de tweets de l'utilisateur
+                                                    key=lambda item: len(item[1]), reverse=True)  # création d'une liste
+                # des utilisateurs triée par ordre décroissant du nombre de tweets de l'utilisateur
                 if self.localisation != "":
                     Tweet.tweets_localisation.append(self.localisation)
                 if self.date[11:13] in Tweet.tweets_time:
@@ -173,7 +175,7 @@ class Tweet:
             used_car = Tweet.used_hashtag
             nom_car = re.findall(r'#\w+', txt)
         else:
-            pass
+            return f'Le caractère {car} ne correspond ni aux hashtags ni aux mentions'
         for element in nom_car:
             liste_car.append(element)
             if element in used_car:
@@ -230,31 +232,29 @@ def top(liste: list, k: int):
     nom = []
     occurrence = []
     for i in range(0, k):
-        try:
-            if liste == Tweet.tweets_of_users_trie:
-                top = 'utilisateur'
-                mention = 'tweet'
-                xlabel = 'Utilisateurs'
-                ylabel = 'Nombre de tweets'
-            elif liste[i][0][0] == '#':
-                top = 'hashtag'
-                mention = 'occurrence'
-                xlabel = 'Hashtags'
-                ylabel = 'Nombre d\'utilisations'
-            elif liste[i][0][0] == '@':
-                top = 'utilisateur mentionné'
-                mention = 'mention'
-                xlabel = 'Utlisateurs mentionnés'
-                ylabel = 'Nombre de mentions'
-            else:
-                pass
-            print(
-                f"Top {i + 1} {top} : {liste[i][0]} avec {len(liste[i][1])} {mention}"
-                f"{'s' if len(liste[i][1]) > 1 else ''}")
-            nom.append(liste[i][0])
-            occurrence.append(len(liste[i][1]))
-        except IndexError:
-            pass
+        if liste == Tweet.tweets_of_users_trie:
+            top = 'utilisateur'
+            mention = 'tweet'
+            xlabel = 'Utilisateurs'
+            ylabel = 'Nombre de tweets'
+        elif liste[i][0][0] == '#':
+            top = 'hashtag'
+            mention = 'occurrence'
+            xlabel = 'Hashtags'
+            ylabel = 'Nombre d\'utilisations'
+        elif liste[i][0][0] == '@':
+            top = 'utilisateur mentionné'
+            mention = 'mention'
+            xlabel = 'Utilisateurs mentionnés'
+            ylabel = 'Nombre de mentions'
+        else:
+            return f'La liste {liste} n\'est pas compatible avec la fonction top'
+        print(
+            f"Top {i + 1} {top} : {liste[i][0]} avec {len(liste[i][1])} {mention}"
+            f"{'s' if len(liste[i][1]) > 1 else ''}")
+        nom.append(liste[i][0])
+        occurrence.append(len(liste[i][1]))
+
     ax = plt.bar(nom, occurrence)
     for bar in ax:
         height = bar.get_height()
@@ -315,7 +315,7 @@ def show_pie_chart(liste: list):
         colors = ['lightcoral', 'cornflowerblue']
         title = 'Représentation de l\'objectivité des tweets'
     else:
-        pass
+        return f'La liste {liste} n\'est pas compatible avec la fonction show_pie_chart'
 
     fig, ax = plt.subplots()
     ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors)
