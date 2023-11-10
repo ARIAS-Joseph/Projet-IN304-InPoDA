@@ -46,10 +46,11 @@ class Tweet:
             print(f'Un élément n\'est pas un dictionnaire et n\'a donc pas pu être analysé: {tweet}')
         else:
             required_keys = ['id', 'AuthorLocation', 'CreatedAt', 'RetweetCount', 'TweetLanguage', 'TweetText']
-            missing_keys = [key for key in required_keys if key not in required_keys]
+            missing_keys = [key for key in required_keys if key not in tweet]
             if missing_keys:
-                print(f"Attention : Le dictionnaire ne contient pas toutes les clés requises. Clé(s) manquante(s):"
-                      f"{missing_keys}")
+                print(f"Attention : Le dictionnaire {tweet} ne contient pas toutes les clés requises ! \n"
+                      f"Clé{'s' if len(missing_keys) > 1 else ''} manquante{'s' if len(missing_keys) > 1 else ''} : "
+                      f"{', '.join(missing_keys)}")
             else:
                 tweet['Hashtags'] = []
                 tweet['Mentions'] = []
@@ -123,10 +124,7 @@ class Tweet:
         donnees = open(file, 'r', encoding='UTF-8')
         liste_tweets = [js.loads(line) for line in donnees]
         for tweet in liste_tweets:
-            try:
-                Tweet(tweet)
-            except Exception:
-                print('La structure du tweet est incorrecte')
+            Tweet(tweet)
 
         donnees.close()
 
@@ -385,6 +383,7 @@ def visualize_tweet_time():
 
 
 tweet1 = Tweet('ouais')
+tweet2 = Tweet({'test': 1})
 
 Tweet.instantiate_from_file()
 
