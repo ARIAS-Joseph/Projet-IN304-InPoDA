@@ -98,12 +98,12 @@ class Tweet:
     def instantiate_from_file(cls, test=0):
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
-        if test == 1:
-            filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
-            while not filepath.endswith(".json") and filepath != '' :
-                filepath = filedialog.askopenfilename(title='OUVRIR UN FICHIER JSON')
-        else:
-            filepath = 'aitweets.json'
+
+        filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
+        erreur = 0
+        while not filepath.endswith(".json") and filepath != '':
+            filepath = filedialog.askopenfilename(title=f'OUVRIR UN FICHIER JSON{' !' * erreur}')
+            erreur += 1
 
         donnees = open(filepath, 'r', encoding='UTF-8')
         liste_tweets = [js.loads(line) for line in donnees]
@@ -130,17 +130,16 @@ class Tweet:
 
         donnees.close()
 
-        if test == 1:
-            bouton_file.destroy()
-            label_file.destroy()
+        bouton_file.destroy()
+        label_file.destroy()
 
-            bouton_analyser = tk.Button(text='Analyser')
-            bouton_analyser.grid()
+        bouton_analyser = tk.Button(text='Analyser')
+        bouton_analyser.grid()
 
     @staticmethod
     def fill_zone_atterrissage(filepath, liste_tweets):
         """Remplit la zone d'atterrissage avec tous les objets tweets de la liste de tweets."""
-        new_name = re.match(r'([^\.]+)', filepath)[1]
+        new_name = re.match(r'([^\\/]+\.json$)', filepath)
         Tweet.reset_zone_atterrissage(new_name)
         file = open(f'zone_atterrissage_{new_name}.json', 'a')
         for tweet in liste_tweets:
@@ -382,10 +381,18 @@ def visualize_tweet_time():
     plt.show()
 
 
-tweet1 = Tweet('ouais')
-tweet2 = Tweet({'test': 1})
-
-Tweet.instantiate_from_file()
+window = tk.Tk()
+window.title('InPoDa')
+path = "logo_twitter.png"
+load = Image.open(path)
+render = ImageTk.PhotoImage(load)
+window.iconphoto(False, render)
+label_file = tk.Label(window, text='Choisir un fichier contenant des tweets au format json', font=('helvetica', '20'),
+                      fg='#00acee')
+bouton_file = tk.Button(window, text='Choisir le fichier', command=Tweet.instantiate_from_file)
+label_file.grid()
+bouton_file.grid()
+window.mainloop()
 
 print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
 print(top(Tweet.user_mentioned_trie, 15))
@@ -400,15 +407,3 @@ show_pie_chart(Tweet.tweets_objectivity)
 
 visualize_tweet_time()
 
-window = tk.Tk()
-window.title('InPoDa')
-path = "logo_twitter.png"
-load = Image.open(path)
-render = ImageTk.PhotoImage(load)
-window.iconphoto(False, render)
-label_file = tk.Label(window, text='Choisir un fichier contenant des tweets au format json', font=('helvetica', '20'),
-                      fg='#00acee')
-bouton_file = tk.Button(window, text='Choisir le fichier', command=Tweet.instantiate_from_file)
-label_file.grid()
-bouton_file.grid()
-window.mainloop()
