@@ -75,4 +75,4 @@ Interface Utilisateur:
 
 ## Avenir du Projet
 
-Le projet est en cours de développement jusqu'en décembre 2023, et des fonctionnalités supplémentaires ainsi que des améliorations sont à prévoir. Votre contribution est la bienvenue!
+Le projet est en cours de développement jusqu'en décembre 2023, et des fonctionnalités supplémentaires ainsi que des améliorations sont à prévoir. Votre contribution est la bienvenue (report de bug, propositions de fonctionnalités,...) !
