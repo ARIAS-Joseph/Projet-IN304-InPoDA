@@ -8,7 +8,6 @@ __status__ = "Development"
 
 import json as js
 import time
-
 import geopy.exc
 from textblob import TextBlob
 import random
@@ -22,8 +21,8 @@ import plotly.graph_objs as go
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
-import emoji
 import os
+import emoji
 
 
 class Tweet:
@@ -79,16 +78,18 @@ class Tweet:
                 self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du
                 # tweet
                 Tweet.used_hashtag_sorted = sorted(Tweet.used_hashtag.items(),
-                                                 key=lambda item: len(item[1]), reverse=True)  # création d'une liste
+                                                   key=lambda item: len(item[1]), reverse=True)  # création d'une liste
                 # des hashtags présents dans les tweets analysés triée par ordre décroissant du nombre d'apparitions du
                 # hashtag
                 Tweet.user_mentioned_sorted = sorted(Tweet.user_mentioned.items(),
-                                                   key=lambda item: len(item[1]), reverse=True)  # création d'une liste
+                                                     key=lambda item: len(item[1]),
+                                                     reverse=True)  # création d'une liste
                 # des utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mentions
                 # de l'utilisateur
                 Tweet.tweets_of_users_sorted = sorted(Tweet.tweets_of_users.items(),
-                                                    key=lambda item: len(item[1]), reverse=True)  # création d'une liste
-                # des utilisateurs triée par ordre décroissant du nombre de tweets de l'utilisateur
+                                                      key=lambda item: len(item[1]),
+                                                      reverse=True)  # création d'une liste des utilisateurs triée par
+                # ordre décroissant du nombre de tweets de l'utilisateur
                 if self.localization != "":
                     Tweet.tweets_localization.append(self.localization)
                 if self.date[11:13] in Tweet.tweets_time:
@@ -97,30 +98,26 @@ class Tweet:
                     Tweet.tweets_time[self.date[11:13]] = 1
                 Tweet.all_tweets.append(self)
 
-    @classmethod
-    def instantiate_from_file(cls, test=0):
+    @staticmethod
+    def instantiate_from_file():
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
 
-        filepath = filedialog.askopenfilename(title='Ouvrir un fichier json')
-        error = 0
-        while not filepath.endswith(".json") and filepath != '':
-            filepath = filedialog.askopenfilename(title=f'OUVRIR UN FICHIER JSON{' !' * error}')
-            error += 1
+        filepath = filedialog.askopenfilename(filetypes=[('Json files', '*.json')], title='Ouvrir un fichier json')
 
         data = open(filepath, 'r', encoding='UTF-8')
         list_tweets = [js.loads(line) for line in data]
 
         # Noms d'utilisateurs qui seront ajoutés aux tweets afin de mieux répondre aux questions du projet étant donné
-        # qu'aucun nom d'utilisateur n'est fourni (certains noms sont plus susceptibles d'apparaître souvent afin de
+        # qu'aucun nom d'utilisateur n'est fourni (certains noms sont plus susceptibles d'apparaître souvent pour
         # rendre l'analyse des données plus intéressante)
-        users_names = [*['@The Fiend'] * 18, *['@Bray Wyatt'] * 66, *['@Shinsuke Nakamura'] * 11, *['@Cory'] * 20,
-                    '@Chumlee', '@Liklenb', '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100,
-                    *['@Paula_Piccard'] * 50, *['@nigewillson'] * 25, *['@machinelearnTec'] * 15, '@Karl_Marx',
-                    *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant', '@machinelearnflx', '@SpirosMargaris',
-                    *['@Datascience__'] * 30, *['@Charles_Henry'] * 38, *['@UEYvelines'] * 78,
-                    *['@unionetudiante_'] * 99, *['@la_classe_ouvriere'] * 16, *['@ogcnice'] * 6, '@Utah',
-                    '@chachat']
+        users_names = [*['@The_Fiend'] * 18, *['@Bray_Wyatt'] * 66, *['@Shinsuke_Nakamura'] * 11, *['@Cory'] * 20,
+                       '@Chumlee', '@Liklenb', '@Jean_Valjean', '@Martin', '@Dupont', *['@IainLJBrown'] * 100,
+                       *['@Paula_Piccard'] * 50, *['@nigewillson'] * 25, *['@machinelearnTec'] * 15, '@Karl_Marx',
+                       *['@akbarth3great'] * 15, '@JoshuaBarbeau', '@sankrant', '@machinelearnflx', '@SpirosMargaris',
+                       *['@Datascience__'] * 30, *['@Charles_Henry'] * 38, *['@UEYvelines'] * 78,
+                       *['@unionetudiante_'] * 99, *['@la_classe_ouvriere'] * 16, *['@ogcnice'] * 6, '@Utah',
+                       '@chachat']
 
         for i in range(len(list_tweets)):
             list_tweets[i]['Author'] = random.choice(users_names)
@@ -148,7 +145,8 @@ class Tweet:
         Tweet.reset_zone_atterrissage(new_name)
         file = open(f'zone_atterrissage_{new_name}.json', 'a')
         for tweet in list_tweets:
-            tweet['TweetText'] = emoji.demojize(tweet['TweetText'])  # on supprime les emojis du tweet
+            tweet['TweetText'] = emoji.demojize(tweet['TweetText'])
+            tweet['TweetText'] = ''.join(re.split(':[^:]+:', tweet['TweetText']))
             js.dump(tweet, file)
             file.write('\n')
         file.close()
@@ -156,7 +154,7 @@ class Tweet:
 
     @staticmethod
     def reset_zone_atterrissage(name):
-        """Supprime tout le text du fichier zone_atterissage.txt."""
+        """Supprime tout le text du fichier zone_atterrissage.txt."""
         open(f'zone_atterrissage_{name}.json', "w").close()
 
     def extract_car(self, car: str):
@@ -382,7 +380,7 @@ def world_map():
 
     m.save('tweet_map.html')
     fin = time.time()
-    print('temps final:', fin-debut)
+    print('temps final:', fin - debut)
 
 
 def visualize_tweet_time():
@@ -395,7 +393,7 @@ def visualize_tweet_time():
     plt.ylabel('Nombre de Tweets')
     plt.title('Nombre de Tweets par Heure')
     plt.xticks(time)
-    plt.yticks(range(min(nb_tweets)-1, max(nb_tweets) + 1, 2))
+    plt.yticks(range(min(nb_tweets) - 1, max(nb_tweets) + 1, 2))
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -422,8 +420,6 @@ print(number_hashtag("#AI"))
 print(publication_author('Chumlee'))
 show_pie_chart(Tweet.tweets_polarity)
 show_pie_chart(Tweet.tweets_objectivity)
-world_map() # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
+"""world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
 # console affiche l'avancement de cette dernière"""
-
 visualize_tweet_time()
-
