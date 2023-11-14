@@ -12,6 +12,8 @@ import geopy.exc
 from textblob import TextBlob
 import random
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
 import folium
 from collections import Counter
 from geopy.geocoders import Nominatim
@@ -28,10 +30,13 @@ import emoji
 class Tweet:
     used_hashtag = {}  # dictionnaire avec le nom du hashtag en clé et la liste des tweets contenant le hashtag en
     # valeur
+    used_hashtag_sorted = []
     user_mentioned = {}  # dictionnaire avec le nom de l'utilisateur en clé et la liste des tweets mentionnant
     # l'utilisateur en valeur
+    user_mentioned_sorted = []
     tweets_of_users = {}  # dictionnaire avec le nom de l'utilisateur en clé et la liste des tweets de l'utilisateur en
     # valeur
+    tweets_of_users_sorted = []
     tweets_polarity = [0, 0, 0]  # avec en indice 0 le nombre de tweets négatifs, en indice 1 le nombre de tweets
     # neutres et en indice 2 le nombre de tweets positifs
     tweets_objectivity = [0, 0]  # avec en indice 0 le nombre de tweets objectifs et en indice 1 le nombre de tweets
@@ -129,25 +134,11 @@ class Tweet:
 
         button_file.destroy()
         label_file.destroy()
-
-        button_tweet_time = tk.Button(text='Analyser les heures de publication')
-        button_tweet_time.grid()
-        button_nb_hashtag = tk.Button(text='Analyser le nombre de publication par hashtag')
-        button_nb_hashtag.grid()
-        button_top_hashtag = tk.Button(text='Analyser le top des hashtags')
-        button_top_hashtag.grid()
-        button_top_user = tk.Button(text='Analyser le top des utilisateurs')
-        button_top_user.grid()
-        button_top_mentioned_user = tk.Button(text='Analyser le top des utilisateurs mentionnés')
-        button_top_mentioned_user.grid()
-        button_polarity = tk.Button(text='Analyser la polarité des tweets')
-        button_polarity.grid()
-        button_publication = tk.Button(text='Montrer tous les tweets d\'un utilisateur')
-        button_publication.grid()
+        button_apparition()
 
     @staticmethod
     def fill_zone_atterrissage(filepath, list_tweets):
-        """Remplit la zone d'atterrissage avec tous les objets tweets de la liste de tweets."""
+        """Remplit la zone d'atterrissage avec tous les tweets de la liste de tweets."""
         new_name = os.path.basename(filepath)
         new_name = os.path.splitext(new_name)[0]
 
@@ -266,15 +257,17 @@ def top(list_used: list, k: int):
         name.append(list_used[i][0])
         occurrence.append(len(list_used[i][1]))
 
-    ax = plt.bar(name, occurrence)
-    for bar in ax:
+    fig, ax = plt.subplots()
+    ax.bar(name, occurrence)
+    for bar in ax.patches:
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom')
-    plt.xticks(rotation=45)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(f'Top {k} des {top}s')
-    plt.show()
+        ax.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom')
+    ax.set_xticklabels(name, rotation=45)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(f'Top {k} des {top}s')
+    show_graph_in_gui(fig)
+
 
 
 def number_hashtag(hashtag: str):
@@ -331,7 +324,7 @@ def show_pie_chart(list_used: list):
     fig, ax = plt.subplots()
     ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors)
     plt.title(title)
-    plt.show()
+    show_graph_in_gui(fig)
 
 
 def world_map():
@@ -396,7 +389,7 @@ def visualize_tweet_time():
     time = list(Tweet.tweets_time.keys())
     nb_tweets = list(Tweet.tweets_time.values())
 
-    plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(10, 6))
     plt.plot(time, nb_tweets, color='skyblue', marker='o', linewidth=3, markeredgewidth=10)
     plt.xlabel('Heure')
     plt.ylabel('Nombre de Tweets')
@@ -404,8 +397,41 @@ def visualize_tweet_time():
     plt.xticks(time)
     plt.yticks(range(min(nb_tweets) - 1, max(nb_tweets) + 1, 2))
     plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+    show_graph_in_gui(fig)
+
+
+def show_graph_in_gui(fig):
+    canvas = FigureCanvasTkAgg(fig, master=window)
+    canvas.draw()
+    canvas.get_tk_widget().grid()
+
+    toolbar = NavigationToolbar2Tk(canvas, window)
+    toolbar.update()
+    canvas.get_tk_widget().grid()
+
+
+def button_apparition():
+    button_tweet_time = tk.Button(text='Analyser les heures de publication', command=visualize_tweet_time)
+    button_tweet_time.grid()
+    button_nb_hashtag = tk.Button(text='Analyser le nombre de publication par hashtag', command=number_hashtag)
+    button_nb_hashtag.grid()
+    button_top_hashtag = tk.Button(text='Analyser le top des hashtags',
+                                   command=lambda: top(Tweet.used_hashtag_sorted, k=10))
+    button_top_hashtag.grid()
+    button_top_user = tk.Button(text='Analyser le top des utilisateurs',
+                                command=lambda: top(Tweet.tweets_of_users_sorted, k=10))
+    button_top_user.grid()
+    button_top_mentioned_user = tk.Button(text='Analyser le top des utilisateurs mentionnés',
+                                          command=lambda: top(Tweet.user_mentioned_sorted, k=10))
+    button_top_mentioned_user.grid()
+    button_polarity = tk.Button(text='Analyser la polarité des tweets',
+                                command=lambda: show_pie_chart(Tweet.tweets_polarity))
+    button_polarity.grid()
+    button_subjectivity = tk.Button(text='Analyser la subjectivité des tweets',
+                                    command=lambda: show_pie_chart(Tweet.tweets_objectivity))
+    button_subjectivity.grid()
+    button_publication = tk.Button(text='Montrer tous les tweets d\'un utilisateur')
+    button_publication.grid()
 
 
 window = tk.Tk()
