@@ -92,10 +92,7 @@ class Tweet:
                 # ordre décroissant du nombre de tweets de l'utilisateur
                 if self.localization != "":
                     Tweet.tweets_localization.append(self.localization)
-                if self.date[11:13] in Tweet.tweets_time:
-                    Tweet.tweets_time[self.date[11:13]] += 1
-                else:
-                    Tweet.tweets_time[self.date[11:13]] = 1
+                Tweet.tweets_time[self.date[11:13]] += 1
                 Tweet.all_tweets.append(self)
 
     @staticmethod
@@ -133,8 +130,20 @@ class Tweet:
         button_file.destroy()
         label_file.destroy()
 
-        button_analyze = tk.Button(text='Analyser')
-        button_analyze.grid()
+        button_tweet_time = tk.Button(text='Analyser les heures de publication')
+        button_tweet_time.grid()
+        button_nb_hashtag = tk.Button(text='Analyser le nombre de publication par hashtag')
+        button_nb_hashtag.grid()
+        button_top_hashtag = tk.Button(text='Analyser le top des hashtags')
+        button_top_hashtag.grid()
+        button_top_user = tk.Button(text='Analyser le top des utilisateurs')
+        button_top_user.grid()
+        button_top_mentioned_user = tk.Button(text='Analyser le top des utilisateurs mentionnés')
+        button_top_mentioned_user.grid()
+        button_polarity = tk.Button(text='Analyser la polarité des tweets')
+        button_polarity.grid()
+        button_publication = tk.Button(text='Montrer tous les tweets d\'un utilisateur')
+        button_publication.grid()
 
     @staticmethod
     def fill_zone_atterrissage(filepath, list_tweets):
@@ -406,7 +415,7 @@ load = Image.open(path)
 render = ImageTk.PhotoImage(load)
 window.iconphoto(False, render)
 label_file = tk.Label(window, text='Choisir un fichier contenant des tweets au format json', font=('helvetica', '20'),
-                      fg='#00acee')
+                      fg='#00ACEE')
 button_file = tk.Button(window, text='Choisir le fichier', command=Tweet.instantiate_from_file)
 label_file.grid()
 button_file.grid()
