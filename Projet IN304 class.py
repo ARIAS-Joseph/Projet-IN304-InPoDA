@@ -223,7 +223,7 @@ class Tweet:
             Tweet.tweets_of_users[self.author] = [self]
 
 
-def top(list_used: list, k: int):
+def top(list_used,k):
     """Top k hashtags ou Top k utilisateurs mentionnés
 
     Fonction qui affiche les top k hashtags ou les tops k utilisateurs mentionnés
@@ -236,6 +236,15 @@ def top(list_used: list, k: int):
         les k hashtags ou utilisateurs qui reviennent le plus
 
     """
+    """label_k = tk.Label(text="Jusqu'à combien voulez-vous voir le top ? (veuillez entrer un nombre entier)")
+    label_k.place(relx=0.5,rely=0.4,anchor=tk.CENTER)
+    my_entry= tk.Entry(window)
+    my_entry.place(relx=0.5,rely=0.5,anchor=tk.CENTER)
+    if my_entry.bind("<Return>"):
+        k = int(my_entry.get())
+    else:
+        k=10"""
+
     name = []
     occurrence = []
     for i in range(0, k):
@@ -412,11 +421,13 @@ def button_apparition():
     button_publication = tk.Button(text='Tous les tweets\nd\'un utilisateur',height=5,width=10,)
     button_publication.place(relx=0.6,rely=0.5,anchor=tk.CENTER)
 
-    label_hashtags = tk.Label(text='Analyse des hashtags :', font='40')
+    label_hashtags = tk.Label(text='Analyse des hashtags :', font=('helvetica','20'))
     label_hashtags.place(relx=0.2,rely=0.3,anchor=tk.CENTER)
-    label_users = tk.Label(text='Analyse des utilisateurs :', font='40')
+
+    label_users = tk.Label(text='Analyse des utilisateurs :', font=('helvetica','20'))
     label_users.place(relx=0.2,rely=0.5,anchor=tk.CENTER)
-    label_other = tk.Label(text='Autre analyse :', font='40')
+
+    label_other = tk.Label(text='Autre analyse :', font=('helvetica','20'))
     label_other.place(relx=0.2,rely=0.7,anchor=tk.CENTER)
 
 
@@ -428,13 +439,13 @@ load = Image.open(path)
 render = ImageTk.PhotoImage(load)
 window.iconphoto(False, render)
 """
-label_InPoDa = tk.Label(window, text='InPoDa', font=("Oswaald", '100'), fg ='#00ACEE')
+label_InPoDa = tk.Label(window, text='InPoDa', font=("Comfortaa", '100'), fg ='#00ACEE')
 label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 """logo = tk.PhotoImage(file="logo.png")
 logo = tk.Label(window, image=logo)
 logo.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
 """
-label_welcome = tk.Label(window, text="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux", font=('Comfortaa', '40'),
+label_welcome = tk.Label(window, text="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux", font=('Oswaald', '40'),
                       fg='dark blue')
 label_welcome.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
 
@@ -453,8 +464,6 @@ print(top(Tweet.used_hashtag_sorted, 15))
 print(top(Tweet.tweets_of_users_sorted, 15))
 print(number_hashtag("#AI"))
 print(publication_author('Chumlee'))"""
-show_pie_chart(Tweet.tweets_polarity)
-show_pie_chart(Tweet.tweets_objectivity)
+
 """world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
 # console affiche l'avancement de cette dernière"""
-visualize_tweet_time()
