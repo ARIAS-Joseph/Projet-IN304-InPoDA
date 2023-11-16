@@ -134,6 +134,7 @@ class Tweet:
 
         button_file.destroy()
         label_file.destroy()
+        label_welcome.destroy()
         button_apparition()
 
     @staticmethod
@@ -411,27 +412,34 @@ def show_graph_in_gui(fig):
 
 
 def button_apparition():
-    button_tweet_time = tk.Button(text='Analyser les heures de publication', command=visualize_tweet_time)
-    button_tweet_time.place(relx=0.1,rely=0.6,anchor=tk.CENTER)
-    button_nb_hashtag = tk.Button(text='Analyser le nombre de publication par hashtag', command=number_hashtag)
-    button_nb_hashtag.place(relx=0.3,rely=0.2,anchor=tk.CENTER)
-    button_top_hashtag = tk.Button(text='Analyser le top des hashtags',
+    button_tweet_time = tk.Button(text='Heures de\npublication', height=5,width=10, command=visualize_tweet_time)
+    button_tweet_time.place(relx=0.8,rely=0.7,anchor=tk.CENTER)
+    button_nb_hashtag = tk.Button(text='Nombre de\npublication\npar hashtag', height=5,width=10, command=number_hashtag)
+    button_nb_hashtag.place(relx=0.6,rely=0.3,anchor=tk.CENTER)
+    button_top_hashtag = tk.Button(text='Top hashtags', height=5,width=10,
                                    command=lambda: top(Tweet.used_hashtag_sorted, k=10))
-    button_top_hashtag.place(relx=0.1,rely=0.2,anchor=tk.CENTER)
-    button_top_user = tk.Button(text='Analyser le top des utilisateurs',
+    button_top_hashtag.place(relx=0.4,rely=0.3,anchor=tk.CENTER)
+    button_top_user = tk.Button(text='Top utilisateurs', height=5,width=10,
                                 command=lambda: top(Tweet.tweets_of_users_sorted, k=10))
-    button_top_user.place(relx=0.1,rely=0.4,anchor=tk.CENTER)
-    button_top_mentioned_user = tk.Button(text='Analyser le top des utilisateurs mentionnés',
+    button_top_user.place(relx=0.4,rely=0.5,anchor=tk.CENTER)
+    button_top_mentioned_user = tk.Button(text='Top utilisateurs\nmentionnés', height=5,width=10,
                                           command=lambda: top(Tweet.user_mentioned_sorted, k=10))
-    button_top_mentioned_user.place(relx=0.3,rely=0.4,anchor=tk.CENTER)
-    button_polarity = tk.Button(text='Analyser la polarité des tweets',
+    button_top_mentioned_user.place(relx=0.8,rely=0.5,anchor=tk.CENTER)
+    button_polarity = tk.Button(text='Polarité', height=5,width=10,
                                 command=lambda: show_pie_chart(Tweet.tweets_polarity))
-    button_polarity.place(relx=0.3,rely=0.6,anchor=tk.CENTER)
-    button_subjectivity = tk.Button(text='Analyser la subjectivité des tweets',
+    button_polarity.place(relx=0.4,rely=0.7,anchor=tk.CENTER)
+    button_subjectivity = tk.Button(text='Subjectivité', height=5,width=10,
                                     command=lambda: show_pie_chart(Tweet.tweets_objectivity))
-    button_subjectivity.place(relx=0.1,rely=0.8,anchor=tk.CENTER)
-    button_publication = tk.Button(text='Montrer tous les tweets d\'un utilisateur')
-    button_publication.place(relx=0.3,rely=0.8,anchor=tk.CENTER)
+    button_subjectivity.place(relx=0.6,rely=0.7,anchor=tk.CENTER)
+    button_publication = tk.Button(text='Tous les tweets\nd\'un utilisateur',height=5,width=10,)
+    button_publication.place(relx=0.6,rely=0.5,anchor=tk.CENTER)
+
+    label_hashtags = tk.Label(text='Analyse des hashtags :', font='40')
+    label_hashtags.place(relx=0.2,rely=0.3,anchor=tk.CENTER)
+    label_users = tk.Label(text='Analyse des utilisateurs :', font='40')
+    label_users.place(relx=0.2,rely=0.5,anchor=tk.CENTER)
+    label_other = tk.Label(text='Autre analyse :', font='40')
+    label_other.place(relx=0.2,rely=0.7,anchor=tk.CENTER)
 
 
 window = tk.Tk()
@@ -442,14 +450,17 @@ load = Image.open(path)
 render = ImageTk.PhotoImage(load)
 window.iconphoto(False, render)
 """
-label_InPoDa = tk.Label(window, text='InPoDa', font=("Comfortaa", '100'), fg ='#00ACEE')
+label_InPoDa = tk.Label(window, text='InPoDa', font=("Oswaald", '100'), fg ='#00ACEE')
 """logo = tk.PhotoImage(file="logo.png")
 logo = tk.Label(window, image=logo)"""
-label_file = tk.Label(window, text='Veuillez choisir un fichier contenant des tweets au format json', font=('helvetica', '20', 'italic'),
+label_welcome = tk.Label(window, text="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux", font=('Comfortaa', '40'),
+                      fg='dark blue')
+label_file = tk.Label(window, text='Veuillez choisir un fichier contenant les tweets à analyser au format json', font=('helvetica', '20', 'italic'),
                       fg='dark blue')
 button_file = tk.Button(window, text='Choisir le fichier', height=5, width=10, command=Tweet.instantiate_from_file, bg='dark blue')
 label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 #logo.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
+label_welcome.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
 label_file.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
 button_file.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
