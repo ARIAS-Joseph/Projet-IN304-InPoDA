@@ -19,7 +19,11 @@ from collections import Counter
 from geopy.geocoders import Nominatim
 import regex as re
 import plotly
+import plotly.express as px
+from plotly.subplots import make_subplots
 import plotly.graph_objs as go
+import plotly.figure_factory as ff
+import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
@@ -257,18 +261,9 @@ def top(list_used: list, k: int):
             f"{'s' if len(list_used[i][1]) > 1 else ''}")
         name.append(list_used[i][0])
         occurrence.append(len(list_used[i][1]))
-
-    fig, ax = plt.subplots()
-    ax.bar(name, occurrence)
-    for bar in ax.patches:
-        height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2.0, height, f'{height:.0f}', ha='center', va='bottom')
-    ax.set_xticklabels(name, rotation=45)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.set_title(f'Top {k} des {top}s')
-    show_graph_in_gui(fig)
-
+    df = pd.DataFrame({xlabel: name, ylabel: occurrence})
+    fig = px.bar(df, x=xlabel, y=ylabel, text=ylabel, title=f'Top {k} des {top}s', labels={xlabel: xlabel, ylabel: ylabel})
+    fig.show()
 
 
 def number_hashtag(hashtag: str):
@@ -321,11 +316,9 @@ def show_pie_chart(list_used: list):
         title = 'Représentation de l\'objectivité des tweets'
     else:
         return f'La liste {list_used} n\'est pas compatible avec la fonction show_pie_chart'
-
-    fig, ax = plt.subplots()
-    ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors)
-    plt.title(title)
-    show_graph_in_gui(fig)
+    df = pd.DataFrame({'labels': labels, 'sizes': sizes})
+    fig = px.pie(df, names='labels', values='sizes', title=title, color_discrete_sequence=colors)
+    fig.show()
 
 
 def world_map():
@@ -389,26 +382,11 @@ def world_map():
 def visualize_tweet_time():
     time = list(Tweet.tweets_time.keys())
     nb_tweets = list(Tweet.tweets_time.values())
-
-    fig = plt.figure(figsize=(10, 6))
-    plt.plot(time, nb_tweets, color='skyblue', marker='o', linewidth=3, markeredgewidth=10)
-    plt.xlabel('Heure')
-    plt.ylabel('Nombre de Tweets')
-    plt.title('Nombre de Tweets par Heure')
-    plt.xticks(time)
-    plt.yticks(range(min(nb_tweets) - 1, max(nb_tweets) + 1, 2))
-    plt.grid(True)
-    show_graph_in_gui(fig)
-
-
-def show_graph_in_gui(fig):
-    canvas = FigureCanvasTkAgg(fig, master=window)
-    canvas.draw()
-    canvas.get_tk_widget().grid()
-
-    toolbar = NavigationToolbar2Tk(canvas, window)
-    toolbar.update()
-    canvas.get_tk_widget().grid()
+    df = pd.DataFrame({'Heure': time, 'Nombre de Tweets': nb_tweets})
+    fig = px.line(df, x='Heure', y='Nombre de Tweets', markers=True, line_shape='linear',
+                  labels={'Heure': 'Heure', 'Nombre de Tweets': 'Nombre de Tweets'},
+                  title='Nombre de Tweets par Heure')
+    fig.show()
 
 
 def button_apparition():
@@ -451,27 +429,30 @@ render = ImageTk.PhotoImage(load)
 window.iconphoto(False, render)
 """
 label_InPoDa = tk.Label(window, text='InPoDa', font=("Oswaald", '100'), fg ='#00ACEE')
+label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 """logo = tk.PhotoImage(file="logo.png")
-logo = tk.Label(window, image=logo)"""
+logo = tk.Label(window, image=logo)
+logo.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
+"""
 label_welcome = tk.Label(window, text="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux", font=('Comfortaa', '40'),
                       fg='dark blue')
+label_welcome.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+
 label_file = tk.Label(window, text='Veuillez choisir un fichier contenant les tweets à analyser au format json', font=('helvetica', '20', 'italic'),
                       fg='dark blue')
-button_file = tk.Button(window, text='Choisir le fichier', height=5, width=10, command=Tweet.instantiate_from_file, bg='dark blue')
-label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
-#logo.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
-label_welcome.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
 label_file.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
+
+button_file = tk.Button(window, text='Choisir le fichier', height=5, width=10, command=Tweet.instantiate_from_file, bg='dark blue')
 button_file.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 window.mainloop()
 
-print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
+"""print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
 print(top(Tweet.user_mentioned_sorted, 15))
 print(top(Tweet.used_hashtag_sorted, 15))
 print(top(Tweet.tweets_of_users_sorted, 15))
 print(number_hashtag("#AI"))
-print(publication_author('Chumlee'))
+print(publication_author('Chumlee'))"""
 show_pie_chart(Tweet.tweets_polarity)
 show_pie_chart(Tweet.tweets_objectivity)
 """world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
