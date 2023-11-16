@@ -412,39 +412,47 @@ def show_graph_in_gui(fig):
 
 def button_apparition():
     button_tweet_time = tk.Button(text='Analyser les heures de publication', command=visualize_tweet_time)
-    button_tweet_time.grid()
+    button_tweet_time.place(relx=0.1,rely=0.6,anchor=tk.CENTER)
     button_nb_hashtag = tk.Button(text='Analyser le nombre de publication par hashtag', command=number_hashtag)
-    button_nb_hashtag.grid()
+    button_nb_hashtag.place(relx=0.3,rely=0.2,anchor=tk.CENTER)
     button_top_hashtag = tk.Button(text='Analyser le top des hashtags',
                                    command=lambda: top(Tweet.used_hashtag_sorted, k=10))
-    button_top_hashtag.grid()
+    button_top_hashtag.place(relx=0.1,rely=0.2,anchor=tk.CENTER)
     button_top_user = tk.Button(text='Analyser le top des utilisateurs',
                                 command=lambda: top(Tweet.tweets_of_users_sorted, k=10))
-    button_top_user.grid()
+    button_top_user.place(relx=0.1,rely=0.4,anchor=tk.CENTER)
     button_top_mentioned_user = tk.Button(text='Analyser le top des utilisateurs mentionnés',
                                           command=lambda: top(Tweet.user_mentioned_sorted, k=10))
-    button_top_mentioned_user.grid()
+    button_top_mentioned_user.place(relx=0.3,rely=0.4,anchor=tk.CENTER)
     button_polarity = tk.Button(text='Analyser la polarité des tweets',
                                 command=lambda: show_pie_chart(Tweet.tweets_polarity))
-    button_polarity.grid()
+    button_polarity.place(relx=0.3,rely=0.6,anchor=tk.CENTER)
     button_subjectivity = tk.Button(text='Analyser la subjectivité des tweets',
                                     command=lambda: show_pie_chart(Tweet.tweets_objectivity))
-    button_subjectivity.grid()
+    button_subjectivity.place(relx=0.1,rely=0.8,anchor=tk.CENTER)
     button_publication = tk.Button(text='Montrer tous les tweets d\'un utilisateur')
-    button_publication.grid()
+    button_publication.place(relx=0.3,rely=0.8,anchor=tk.CENTER)
 
 
 window = tk.Tk()
 window.title('InPoDa')
-path = "logo_twitter.png"
+window.state('zoomed')
+"""path = "logo_twitter.png"
 load = Image.open(path)
 render = ImageTk.PhotoImage(load)
 window.iconphoto(False, render)
-label_file = tk.Label(window, text='Choisir un fichier contenant des tweets au format json', font=('helvetica', '20'),
-                      fg='#00ACEE')
-button_file = tk.Button(window, text='Choisir le fichier', command=Tweet.instantiate_from_file)
-label_file.grid()
-button_file.grid()
+"""
+label_InPoDa = tk.Label(window, text='InPoDa', font=("Comfortaa", '100'), fg ='#00ACEE')
+"""logo = tk.PhotoImage(file="logo.png")
+logo = tk.Label(window, image=logo)"""
+label_file = tk.Label(window, text='Veuillez choisir un fichier contenant des tweets au format json', font=('helvetica', '20', 'italic'),
+                      fg='dark blue')
+button_file = tk.Button(window, text='Choisir le fichier', height=5, width=10, command=Tweet.instantiate_from_file, bg='dark blue')
+label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
+#logo.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
+label_file.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
+button_file.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
 window.mainloop()
 
 print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
