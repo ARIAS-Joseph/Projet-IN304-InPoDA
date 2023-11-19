@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 __author__ = "Mathilde GAUTEUR, Joseph ARIAS"
 __copyright__ = "Copyright 2023, Projet InPoDa"
 __credits__ = ["Mathilde GAUTEUR", "Joseph ARIAS"]
@@ -223,7 +226,7 @@ class Tweet:
             Tweet.tweets_of_users[self.author] = [self]
 
 
-def top(list_used,k):
+def get_top(list_used, error=0):
     """Top k hashtags ou Top k utilisateurs mentionnés
 
     Fonction qui affiche les top k hashtags ou les tops k utilisateurs mentionnés
@@ -236,15 +239,30 @@ def top(list_used,k):
         les k hashtags ou utilisateurs qui reviennent le plus
 
     """
-    """label_k = tk.Label(text="Jusqu'à combien voulez-vous voir le top ? (veuillez entrer un nombre entier)")
-    label_k.place(relx=0.5,rely=0.4,anchor=tk.CENTER)
-    my_entry= tk.Entry(window)
-    my_entry.place(relx=0.5,rely=0.5,anchor=tk.CENTER)
-    if my_entry.bind("<Return>"):
-        k = int(my_entry.get())
-    else:
-        k=10"""
+    if error == 1:
+        label_error = tk.Label(text="Vous n'avez pas rentré un nombre entier. Veuillez recommencer",
+                               highlightcolor='red')
+        label_error.place(relx=0.5, rely=0.45, anchor=tk.CENTER)
+    label_k = tk.Label(text="Jusqu'à combien voulez-vous voir le top ? (veuillez entrer un nombre entier)")
+    label_k.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
+    my_entry = tk.Entry(window)
+    my_entry.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+    ok_button = tk.Button(window, text="OK", command=lambda: get_k(list_used, my_entry, ok_button, label_k, error,
+                                                                   label_error))
+    ok_button.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
 
+
+def get_k(list_used, entry, button, label, error, label_error):
+    button.destroy()
+    label.destroy()
+    try:
+        k = int(entry.get())
+        if error == 0:
+            label_error.destroy()
+    except ValueError:
+        entry.destroy()
+        get_top(list_used, 1)
+    entry.destroy()
     name = []
     occurrence = []
     for i in range(0, k):
@@ -271,7 +289,8 @@ def top(list_used,k):
         name.append(list_used[i][0])
         occurrence.append(len(list_used[i][1]))
     df = pd.DataFrame({xlabel: name, ylabel: occurrence})
-    fig = px.bar(df, x=xlabel, y=ylabel, text=ylabel, title=f'Top {k} des {top}s', labels={xlabel: xlabel, ylabel: ylabel})
+    fig = px.bar(df, x=xlabel, y=ylabel, text=ylabel, title=f'Top {k} des {top}s',
+                 labels={xlabel: xlabel, ylabel: ylabel})
     fig.show()
 
 
@@ -399,36 +418,37 @@ def visualize_tweet_time():
 
 
 def button_apparition():
-    button_tweet_time = tk.Button(text='Heures de\npublication', height=5,width=10, command=visualize_tweet_time)
-    button_tweet_time.place(relx=0.8,rely=0.7,anchor=tk.CENTER)
-    button_nb_hashtag = tk.Button(text='Nombre de\npublication\npar hashtag', height=5,width=10, command=number_hashtag)
-    button_nb_hashtag.place(relx=0.6,rely=0.3,anchor=tk.CENTER)
-    button_top_hashtag = tk.Button(text='Top hashtags', height=5,width=10,
-                                   command=lambda: top(Tweet.used_hashtag_sorted, k=10))
-    button_top_hashtag.place(relx=0.4,rely=0.3,anchor=tk.CENTER)
-    button_top_user = tk.Button(text='Top utilisateurs', height=5,width=10,
-                                command=lambda: top(Tweet.tweets_of_users_sorted, k=10))
-    button_top_user.place(relx=0.4,rely=0.5,anchor=tk.CENTER)
-    button_top_mentioned_user = tk.Button(text='Top utilisateurs\nmentionnés', height=5,width=10,
-                                          command=lambda: top(Tweet.user_mentioned_sorted, k=10))
-    button_top_mentioned_user.place(relx=0.8,rely=0.5,anchor=tk.CENTER)
-    button_polarity = tk.Button(text='Polarité', height=5,width=10,
+    button_tweet_time = tk.Button(text='Heures de\npublication', height=5, width=10, command=visualize_tweet_time)
+    button_tweet_time.place(relx=0.8, rely=0.7, anchor=tk.CENTER)
+    button_nb_hashtag = tk.Button(text='Nombre de\npublication\npar hashtag', height=5, width=10,
+                                  command=number_hashtag)
+    button_nb_hashtag.place(relx=0.6, rely=0.3, anchor=tk.CENTER)
+    button_top_hashtag = tk.Button(text='Top hashtags', height=5, width=10,
+                                   command=lambda: get_top(Tweet.used_hashtag_sorted))
+    button_top_hashtag.place(relx=0.4, rely=0.3, anchor=tk.CENTER)
+    button_top_user = tk.Button(text='Top utilisateurs', height=5, width=10,
+                                command=lambda: get_top(Tweet.tweets_of_users_sorted))
+    button_top_user.place(relx=0.4, rely=0.5, anchor=tk.CENTER)
+    button_top_mentioned_user = tk.Button(text='Top utilisateurs\nmentionnés', height=5, width=10,
+                                          command=lambda: get_top(Tweet.user_mentioned_sorted))
+    button_top_mentioned_user.place(relx=0.8, rely=0.5, anchor=tk.CENTER)
+    button_polarity = tk.Button(text='Polarité', height=5, width=10,
                                 command=lambda: show_pie_chart(Tweet.tweets_polarity))
-    button_polarity.place(relx=0.4,rely=0.7,anchor=tk.CENTER)
-    button_subjectivity = tk.Button(text='Subjectivité', height=5,width=10,
+    button_polarity.place(relx=0.4, rely=0.7, anchor=tk.CENTER)
+    button_subjectivity = tk.Button(text='Subjectivité', height=5, width=10,
                                     command=lambda: show_pie_chart(Tweet.tweets_objectivity))
-    button_subjectivity.place(relx=0.6,rely=0.7,anchor=tk.CENTER)
-    button_publication = tk.Button(text='Tous les tweets\nd\'un utilisateur',height=5,width=10,)
-    button_publication.place(relx=0.6,rely=0.5,anchor=tk.CENTER)
+    button_subjectivity.place(relx=0.6, rely=0.7, anchor=tk.CENTER)
+    button_publication = tk.Button(text='Tous les tweets\nd\'un utilisateur', height=5, width=10, )
+    button_publication.place(relx=0.6, rely=0.5, anchor=tk.CENTER)
 
-    label_hashtags = tk.Label(text='Analyse des hashtags :', font=('helvetica','20'))
-    label_hashtags.place(relx=0.2,rely=0.3,anchor=tk.CENTER)
+    label_hashtags = tk.Label(text='Analyse des hashtags :', font=('helvetica', '20'))
+    label_hashtags.place(relx=0.2, rely=0.3, anchor=tk.CENTER)
 
-    label_users = tk.Label(text='Analyse des utilisateurs :', font=('helvetica','20'))
-    label_users.place(relx=0.2,rely=0.5,anchor=tk.CENTER)
+    label_users = tk.Label(text='Analyse des utilisateurs :', font=('helvetica', '20'))
+    label_users.place(relx=0.2, rely=0.5, anchor=tk.CENTER)
 
-    label_other = tk.Label(text='Autre analyse :', font=('helvetica','20'))
-    label_other.place(relx=0.2,rely=0.7,anchor=tk.CENTER)
+    label_other = tk.Label(text='Autre analyse :', font=('helvetica', '20'))
+    label_other.place(relx=0.2, rely=0.7, anchor=tk.CENTER)
 
 
 window = tk.Tk()
@@ -439,29 +459,30 @@ load = Image.open(path)
 render = ImageTk.PhotoImage(load)
 window.iconphoto(False, render)
 """
-label_InPoDa = tk.Label(window, text='InPoDa', font=("Comfortaa", '100'), fg ='#00ACEE')
+label_InPoDa = tk.Label(window, text='InPoDa', font=("Comfortaa", '100'), fg='#00ACEE')
 label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 """logo = tk.PhotoImage(file="logo.png")
 logo = tk.Label(window, image=logo)
 logo.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
 """
-label_welcome = tk.Label(window, text="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux", font=('Oswaald', '40'),
-                      fg='dark blue')
+label_welcome = tk.Label(window, text="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux",
+                         font=('Oswaald', '40'), fg='dark blue')
 label_welcome.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
 
-label_file = tk.Label(window, text='Veuillez choisir un fichier contenant les tweets à analyser au format json', font=('helvetica', '20', 'italic'),
-                      fg='dark blue')
+label_file = tk.Label(window, text='Veuillez choisir un fichier contenant les tweets à analyser au format json',
+                      font=('helvetica', '20', 'italic'), fg='dark blue')
 label_file.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
 
-button_file = tk.Button(window, text='Choisir le fichier', height=5, width=10, command=Tweet.instantiate_from_file, bg='dark blue')
+button_file = tk.Button(window, text='Choisir le fichier', height=5, width=10, command=Tweet.instantiate_from_file,
+                        bg='dark blue')
 button_file.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 window.mainloop()
 
 """print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
-print(top(Tweet.user_mentioned_sorted, 15))
-print(top(Tweet.used_hashtag_sorted, 15))
-print(top(Tweet.tweets_of_users_sorted, 15))
+print(get_top(Tweet.user_mentioned_sorted, 15))
+print(get_top(Tweet.used_hashtag_sorted, 15))
+print(get_top(Tweet.tweets_of_users_sorted, 15))
 print(number_hashtag("#AI"))
 print(publication_author('Chumlee'))"""
 
