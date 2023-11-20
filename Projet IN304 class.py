@@ -14,9 +14,6 @@ import time
 import geopy.exc
 from textblob import TextBlob
 import random
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.figure import Figure
 import folium
 from collections import Counter
 from geopy.geocoders import Nominatim
@@ -32,6 +29,8 @@ from tkinter import filedialog
 from PIL import Image, ImageTk
 import os
 import emoji
+import plotly.io as pio
+from tkinterhtml import HtmlFrame
 
 
 class Tweet:
@@ -247,17 +246,20 @@ def get_top(list_used, error=0):
     label_k.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
     my_entry = tk.Entry(window)
     my_entry.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-    ok_button = tk.Button(window, text="OK", command=lambda: get_k(list_used, my_entry, ok_button, label_k, error,
-                                                                   label_error))
+    if error == 1:
+        ok_button = tk.Button(window, text="OK", command=lambda: get_k(list_used, my_entry, ok_button, label_k, error,
+                                                                       label_error))
+    else:
+        ok_button = tk.Button(window, text="OK", command=lambda: get_k(list_used, my_entry, ok_button, label_k, error))
     ok_button.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
 
 
-def get_k(list_used, entry, button, label, error, label_error):
+def get_k(list_used, entry, button, label, error, label_error=None):
     button.destroy()
     label.destroy()
     try:
         k = int(entry.get())
-        if error == 0:
+        if error == 1:
             label_error.destroy()
     except ValueError:
         entry.destroy()
@@ -292,6 +294,10 @@ def get_k(list_used, entry, button, label, error, label_error):
     fig = px.bar(df, x=xlabel, y=ylabel, text=ylabel, title=f'Top {k} des {top}s',
                  labels={xlabel: xlabel, ylabel: ylabel})
     fig.show()
+    """plotly_html = pio.to_html(fig, full_html=True)
+    plot_frame = HtmlFrame(window, horizontal_scrollbar="auto", vertical_scrollbar="auto")
+    plot_frame.set_content(plotly_html)
+    plot_frame.pack(fill="both", expand=True)"""
 
 
 def number_hashtag(hashtag: str):
@@ -335,12 +341,12 @@ def show_pie_chart(list_used: list):
     if list_used == Tweet.tweets_polarity:
         labels = 'Négatif', 'Neutre', 'Positif'
         sizes = Tweet.tweets_polarity
-        colors = ['lightcoral', 'silver', 'cornflowerblue']
+        colors = ['silver', 'lightcoral', 'cornflowerblue']
         title = 'Représentation de la polarité des tweets'
     elif list_used == Tweet.tweets_objectivity:
         labels = 'Objectif', 'Subjectif'
         sizes = Tweet.tweets_objectivity
-        colors = ['lightcoral', 'cornflowerblue']
+        colors = ['cornflowerblue', 'lightcoral']
         title = 'Représentation de l\'objectivité des tweets'
     else:
         return f'La liste {list_used} n\'est pas compatible avec la fonction show_pie_chart'
@@ -454,11 +460,10 @@ def button_apparition():
 window = tk.Tk()
 window.title('InPoDa')
 window.state('zoomed')
-"""path = "logo_twitter.png"
+path = "logo_twitter.png"
 load = Image.open(path)
 render = ImageTk.PhotoImage(load)
 window.iconphoto(False, render)
-"""
 label_InPoDa = tk.Label(window, text='InPoDa', font=("Comfortaa", '100'), fg='#00ACEE')
 label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 """logo = tk.PhotoImage(file="logo.png")
