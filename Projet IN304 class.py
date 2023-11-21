@@ -490,7 +490,9 @@ def start():
     return {
         welcome_label : gr.Label(visible=False),
         analyze_file : gr.FileExplorer(visible=False),
-        analyze_button : gr.Button(visible=False)
+        analyze_button : gr.Button(visible=False),
+        analysis : gr.Radio(visible=True)
+
     }
 def process_file(file_path):
     with open(file_path,'r') as file:
@@ -498,11 +500,12 @@ def process_file(file_path):
 
 
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='sky')) as interface:
-    title_label = gr.Label(label = "InPoDa", value= "InPoDa", color="#00ACEE")
+    title = gr.Label(label = "InPoDa", value= "InPoDa", color="#00ACEE")
     welcome_label= gr.Label(label= "Bonjour",value="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux.\nVeuillez choisir un fichier à analyser")
     analyze_file = gr.FileExplorer(label ="Sélectionner un fichier format json", interactive = True)
     analyze_button = gr.Button(value="Lancer l'analyse")
-    analyze_button.click(start, outputs=[welcome_label,analyze_file, analyze_button])
+    analysis = gr.Radio(["Top", "Heures", "Polarité", "Subjectivité"], label="Analyses", info="Que voulez-vous analyser ?",visible=False)
+    analyze_button.click(start, outputs=[welcome_label,analyze_file, analyze_button, analysis])
 
 interface.launch()
 
