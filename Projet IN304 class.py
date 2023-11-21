@@ -30,7 +30,8 @@ from PIL import Image, ImageTk
 import os
 import emoji
 import plotly.io as pio
-from tkinterhtml import HtmlFrame
+import gradio as gr
+#from tkinterhtml import HtmlFrame
 
 
 class Tweet:
@@ -138,10 +139,10 @@ class Tweet:
 
         data.close()
 
-        button_file.destroy()
+        """button_file.destroy()
         label_file.destroy()
         label_welcome.destroy()
-        button_apparition()
+        button_apparition()"""
 
     @staticmethod
     def fill_zone_atterrissage(filepath, list_tweets):
@@ -238,7 +239,7 @@ def get_top(list_used, error=0):
         les k hashtags ou utilisateurs qui reviennent le plus
 
     """
-    if error == 1:
+    """if error == 1:
         label_error = tk.Label(text="Vous n'avez pas rentré un nombre entier. Veuillez recommencer",
                                highlightcolor='red')
         label_error.place(relx=0.5, rely=0.45, anchor=tk.CENTER)
@@ -251,12 +252,12 @@ def get_top(list_used, error=0):
                                                                        label_error))
     else:
         ok_button = tk.Button(window, text="OK", command=lambda: get_k(list_used, my_entry, ok_button, label_k, error))
-    ok_button.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
+    ok_button.place(relx=0.5, rely=0.6, anchor=tk.CENTER)"""
 
 
 def get_k(list_used, entry, button, label, error, label_error=None):
-    button.destroy()
-    label.destroy()
+    """button.destroy()
+    label.destroy()"""
     try:
         k = int(entry.get())
         if error == 1:
@@ -423,7 +424,7 @@ def visualize_tweet_time():
     fig.show()
 
 
-def button_apparition():
+"""def button_apparition():
     button_tweet_time = tk.Button(text='Heures de\npublication', height=5, width=10, command=visualize_tweet_time)
     button_tweet_time.place(relx=0.8, rely=0.7, anchor=tk.CENTER)
     button_nb_hashtag = tk.Button(text='Nombre de\npublication\npar hashtag', height=5, width=10,
@@ -455,9 +456,9 @@ def button_apparition():
 
     label_other = tk.Label(text='Autre analyse :', font=('helvetica', '20'))
     label_other.place(relx=0.2, rely=0.7, anchor=tk.CENTER)
+"""
 
-
-window = tk.Tk()
+"""window = tk.Tk()
 window.title('InPoDa')
 window.state('zoomed')
 path = "logo_twitter.png"
@@ -466,10 +467,10 @@ render = ImageTk.PhotoImage(load)
 window.iconphoto(False, render)
 label_InPoDa = tk.Label(window, text='InPoDa', font=("Comfortaa", '100'), fg='#00ACEE')
 label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
-"""logo = tk.PhotoImage(file="logo.png")
+logo = tk.PhotoImage(file="logo.png")
 logo = tk.Label(window, image=logo)
 logo.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
-"""
+
 label_welcome = tk.Label(window, text="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux",
                          font=('Oswaald', '40'), fg='dark blue')
 label_welcome.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
@@ -482,7 +483,28 @@ button_file = tk.Button(window, text='Choisir le fichier', height=5, width=10, c
                         bg='dark blue')
 button_file.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-window.mainloop()
+window.mainloop()"""
+
+def start():
+    #Tweet.instantiate_from_file
+    return {
+        welcome_label : gr.Label(visible=False),
+        analyze_file : gr.FileExplorer(visible=False),
+        analyze_button : gr.Button(visible=False)
+    }
+def process_file(file_path):
+    with open(file_path,'r') as file:
+        pass
+
+
+with gr.Blocks(theme=gr.themes.Soft(neutral_hue='sky')) as interface:
+    title_label = gr.Label(label = "InPoDa", value= "InPoDa", color="#00ACEE")
+    welcome_label= gr.Label(label= "Bonjour",value="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux.\nVeuillez choisir un fichier à analyser")
+    analyze_file = gr.FileExplorer(label ="Sélectionner un fichier format json", interactive = True)
+    analyze_button = gr.Button(value="Lancer l'analyse")
+    analyze_button.click(start, outputs=[welcome_label,analyze_file, analyze_button])
+
+interface.launch()
 
 """print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
 print(get_top(Tweet.user_mentioned_sorted, 15))
