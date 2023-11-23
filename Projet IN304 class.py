@@ -54,6 +54,7 @@ class Tweet:
     tweets_time = {str(i).zfill(2): 0 for i in range(24)}  # création des clés dans le dictionnaire dans l'ordre
     # croissant pour améliorer le graphique de la fonction visualize_time
     nb_tweets = 0
+    compass = []
 
     def __init__(self, tweet: dict):
 
@@ -215,6 +216,8 @@ class Tweet:
         elif sentiment[1] >= 0.5:
             self.subjectivity = 'Subjectif'
             Tweet.tweets_objectivity[1] += 1
+        Tweet.compass.append([sentiment[0], sentiment[1]])
+
 
     def extract_topics(self):
         pass
@@ -358,6 +361,32 @@ def show_pie_chart(list_used: list):
     fig.show()
 
 
+def show_pie_chart2():
+
+    df = pd.DataFrame(Tweet.compass, columns=['Polarité', 'Subjectivité'])
+    fig = px.scatter(df, x='Subjectivité', y='Polarité',
+                     color='Polarité', color_continuous_scale='RdBu',
+                     title='Visualisation des Tweets selon la Subjectivité et la Polarité')
+    # Centrage du graphique
+    fig.update_layout(xaxis=dict(range=[-0.1, 1.1], zeroline=False, showline=False),
+                      yaxis=dict(range=[-1.1, 1.1], zeroline=True, zerolinewidth=1, zerolinecolor='black'),
+                      plot_bgcolor='darkseagreen', margin=dict(l=0, r=0, t=0, b=0))
+
+    # Ajout d'une ligne verticale à 0.5 sur l'axe de la subjectivité
+    fig.add_shape(type='line', x0=0.5, y0=-1.1, x1=0.5, y1=1.1, line=dict(color='black', width=1))
+
+    # Mise en forme du graphique
+    fig.update_traces(marker=dict(size=12, opacity=0.8), selector=dict(mode='markers+text'))
+    fig.update_layout(xaxis_title='Subjectivité', yaxis_title='Polarité')
+    fig.update_coloraxes(colorbar_title='Polarité')
+
+    # Réglage de l'axe x pour placer la ligne zéro à 0.5 et cacher les valeurs dépassant les seuils
+    fig.update_xaxes(showgrid=False, tickvals=[0, 0.5, 1], ticktext=['0', '0.5', '1'], tickmode='array')
+    fig.update_yaxes(showgrid=False, tickvals=[-1, 0, 1], ticktext=['-1', '0', '1'], tickmode='array')
+
+    fig.show()
+
+
 def world_map():
     debut = time.time()
     geolocator = Nominatim(user_agent="Géolocalisation_tweets")
@@ -493,8 +522,8 @@ def start():
     return {
         welcome_label: gr.Label(visible=False),
         analyze_button: gr.Button(visible=False),
-        analyze_file: gr.File(visible=False)
-
+        analyze_file: gr.File(visible=False),
+        analysis: gr.Radio(visible=True)
     }
 
 
@@ -503,15 +532,19 @@ def process_file(file_path):
         pass
 
 
+Tweet.instantiate_from_file()
+show_pie_chart2()
+
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
     welcome_label = gr.Label(label="Bonjour", value="Bienvenue sur InPoDa, la plateforme d'analyse de données de"
                                                     "réseaux sociaux.\nVeuillez choisir un fichier à analyser")
     analyze_file = gr.File(file_count='multiple', file_types=['.json'], interactive=True,
-                           label="Sélection du/des fichier/fichiers à analyser")
+                           label="Sélectionnez un ou des fichiers à analyser")
     analyze_button = gr.Button(value="Lancer l'analyse")
-    analysis = gr.Radio(["Top", "Heures", "Polarité", "Subjectivité"], label="Analyses",
-                        info="Que voulez-vous analyser ?", visible=False)
+    analysis = gr.Radio(
+        ["Top", "Heures", "Polarité", "Subjectivité", "Nombres d'utilisation d'un hashtag", "Tweets d'un utilisateur"],
+        label="Analyses", info="Que voulez-vous analyser ?", visible=False)
     analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
 
 
