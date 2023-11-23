@@ -31,7 +31,9 @@ import os
 import emoji
 import plotly.io as pio
 import gradio as gr
-#from tkinterhtml import HtmlFrame
+
+
+# from tkinterhtml import HtmlFrame
 
 
 class Tweet:
@@ -51,7 +53,7 @@ class Tweet:
     tweets_localization = []  # liste de toutes les localisations des tweets
     tweets_time = {str(i).zfill(2): 0 for i in range(24)}  # création des clés dans le dictionnaire dans l'ordre
     # croissant pour améliorer le graphique de la fonction visualize_time
-    all_tweets = []  # liste de tous les tweets
+    nb_tweets = 0
 
     def __init__(self, tweet: dict):
 
@@ -105,7 +107,7 @@ class Tweet:
                 if self.localization != "":
                     Tweet.tweets_localization.append(self.localization)
                 Tweet.tweets_time[self.date[11:13]] += 1
-                Tweet.all_tweets.append(self)
+                Tweet.nb_tweets += 1
 
     @staticmethod
     def instantiate_from_file():
@@ -485,27 +487,33 @@ button_file.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 window.mainloop()"""
 
+
 def start():
-    #Tweet.instantiate_from_file
+    # Tweet.instantiate_from_file
     return {
-        welcome_label : gr.Label(visible=False),
-        analyze_file : gr.FileExplorer(visible=False),
-        analyze_button : gr.Button(visible=False),
-        analysis : gr.Radio(visible=True)
+        welcome_label: gr.Label(visible=False),
+        analyze_button: gr.Button(visible=False),
+        analyze_file: gr.File(visible=False)
 
     }
+
+
 def process_file(file_path):
-    with open(file_path,'r') as file:
+    with open(file_path, 'r') as file:
         pass
 
 
-with gr.Blocks(theme=gr.themes.Soft(neutral_hue='sky')) as interface:
-    title = gr.Label(label = "InPoDa", value= "InPoDa", color="#00ACEE")
-    welcome_label= gr.Label(label= "Bonjour",value="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux.\nVeuillez choisir un fichier à analyser")
-    analyze_file = gr.FileExplorer(label ="Sélectionner un fichier format json", interactive = True)
+with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
+    title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
+    welcome_label = gr.Label(label="Bonjour", value="Bienvenue sur InPoDa, la plateforme d'analyse de données de"
+                                                    "réseaux sociaux.\nVeuillez choisir un fichier à analyser")
+    analyze_file = gr.File(file_count='multiple', file_types=['.json'], interactive=True,
+                           label="Sélection du/des fichier/fichiers à analyser")
     analyze_button = gr.Button(value="Lancer l'analyse")
-    analysis = gr.Radio(["Top", "Heures", "Polarité", "Subjectivité"], label="Analyses", info="Que voulez-vous analyser ?",visible=False)
-    analyze_button.click(start, outputs=[welcome_label,analyze_file, analyze_button, analysis])
+    analysis = gr.Radio(["Top", "Heures", "Polarité", "Subjectivité"], label="Analyses",
+                        info="Que voulez-vous analyser ?", visible=False)
+    analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
+
 
 interface.launch()
 
