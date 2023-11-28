@@ -24,16 +24,15 @@ from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 import plotly.figure_factory as ff
 import pandas as pd
-import tkinter as tk
 from tkinter import filedialog
-from PIL import Image, ImageTk
 import os
 import emoji
 import plotly.io as pio
 import gradio as gr
-
-
-# from tkinterhtml import HtmlFrame
+import operator
+import asyncio
+import threading
+import concurrent.futures
 
 
 class Tweet:
@@ -50,6 +49,7 @@ class Tweet:
     # neutres et en indice 2 le nombre de tweets positifs
     tweets_objectivity = [0, 0]  # avec en indice 0 le nombre de tweets objectifs et en indice 1 le nombre de tweets
     # subjectifs
+    topics = {}
     tweets_localization = []  # liste de toutes les localisations des tweets
     tweets_time = {str(i).zfill(2): 0 for i in range(24)}  # création des clés dans le dictionnaire dans l'ordre
     # croissant pour améliorer le graphique de la fonction visualize_time
@@ -93,18 +93,19 @@ class Tweet:
                 self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du
                 # tweet
                 Tweet.used_hashtag_sorted = sorted(Tweet.used_hashtag.items(),
-                                                   key=lambda item: len(item[1]), reverse=True)  # création d'une liste
+                                                   key=operator.itemgetter(1), reverse=True)  # création d'une liste
                 # des hashtags présents dans les tweets analysés triée par ordre décroissant du nombre d'apparitions du
                 # hashtag
                 Tweet.user_mentioned_sorted = sorted(Tweet.user_mentioned.items(),
-                                                     key=lambda item: len(item[1]),
+                                                     key=operator.itemgetter(1),
                                                      reverse=True)  # création d'une liste
                 # des utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mentions
                 # de l'utilisateur
                 Tweet.tweets_of_users_sorted = sorted(Tweet.tweets_of_users.items(),
-                                                      key=lambda item: len(item[1]),
+                                                      key=operator.itemgetter(1),
                                                       reverse=True)  # création d'une liste des utilisateurs triée par
                 # ordre décroissant du nombre de tweets de l'utilisateur
+                Tweet.topics_sorted = sorted(Tweet.topics.items(), key=operator.itemgetter(1), reverse=True)
                 if self.localization != "":
                     Tweet.tweets_localization.append(self.localization)
                 Tweet.tweets_time[self.date[11:13]] += 1
@@ -141,11 +142,6 @@ class Tweet:
             Tweet(tweet)
 
         data.close()
-
-        """button_file.destroy()
-        label_file.destroy()
-        label_welcome.destroy()
-        button_apparition()"""
 
     @staticmethod
     def fill_zone_atterrissage(filepath, list_tweets):
@@ -192,9 +188,9 @@ class Tweet:
         for element in name_car:
             list_car.append(element)
             if element in used_car:
-                used_car[element].append(self)
+                used_car[element] += 1
             else:
-                used_car[element] = [self]
+                used_car[element] = 1
 
     def analyze_sentiment(self):
         """Fonction qui analyse le sentiment d'un tweet (négatif, neutre ou positif)
@@ -218,20 +214,53 @@ class Tweet:
             Tweet.tweets_objectivity[1] += 1
         Tweet.compass.append([sentiment[0], sentiment[1]])
 
-
     def extract_topics(self):
-        pass
+        equivalence = {'artificial intelligence': ['ai', 'artificialintelligence', 'artificial', 'artif', 'arti', 'art',
+                                                   'intoainews', 'intelligence', 'artificial_intelligence',
+                                                   'artificia', 'artificialin', 'artificialintellig',
+                                                   'artificialintellige', 'artificialintell', 'ainews', 'artificialint',
+                                                   'artificialintelli', 'artific', 'ia', 'inteligenciaartificial',
+                                                   'artificialintelligen', 'artificialintel', 'artificialinte',
+                                                   'arificialinterlligence', 'artificialintelligenc', 'intela',
+                                                   'artificialintelligenc', 'ronald_teaches_artificial_intelligence',
+                                                   'artificial intelligence', 'ia', 'artifici',
+                                                   'artificialintelligencetechnology'],
+                       'machine learning': ['machinelearn', 'machinelearning', 'ml', 'deeplearning', 'learning',
+                                            'machine', 'dl', 'nlp', 'machinelea', 'datascien', 'machi', 'machinelearni'
+                                            'deeple', 'mach', 'machinelearnin', 'tensorflow', 'deepneuralnetworks',
+                                            'machinele', 'neuralnetworks', 'machin', 'machinelear', 'sciketlearn',
+                                            'deeplearningframework', '100daysofmlcode', 'machinelearni',
+                                            'machine learning', 'deeple'],
+                       'data': ['datascience', 'bigdata', 'analytics', 'data', 'datatype', 'datax', 'datas', 'datasc',
+                                'bigdat', 'datasci', 'dat', 'hdatasystems'],
+                       'programmation': ['python', 'python3', 'programming', '100daysofcode', 'coding', 'javascript',
+                                         'java', 'sql', 'code', 'cod', '100da', '100daysof', 'pytho', '100days',
+                                         'fullstack', '100day', 'coder', '100daysofcod', 'cloudcomputing', 'prog',
+                                         'flutte', 'algorithm', 'programmerlife', 'iot', 'programmation', 'numpy',
+                                         'devcommunity']
+                       }
+        for hashtag in self.hashtag:
+            hashtag = hashtag[1::].lower()
+            for topic in equivalence:
+                if hashtag in equivalence[topic] or self.texte.lower() in equivalence[topic]:
+                    hashtag = topic
+            self.topics.append(hashtag)
+        for topic in self.topics:
+            if topic in Tweet.topics:
+                Tweet.topics[topic] += 1
+            else:
+                Tweet.topics[topic] = 1
 
     def list_tweet_by_author(self):
         """Fonction qui ajoute le tweet à la liste des tweets d'un utilisateur
         """
         try:
-            Tweet.tweets_of_users[self.author].append(self)
+            Tweet.tweets_of_users[self.author] += 1
         except KeyError:
-            Tweet.tweets_of_users[self.author] = [self]
+            Tweet.tweets_of_users[self.author] = 1
 
 
-def get_top(list_used, error=0):
+def get_top(list_used, k):
     """Top k hashtags ou Top k utilisateurs mentionnés
 
     Fonction qui affiche les top k hashtags ou les tops k utilisateurs mentionnés
@@ -244,66 +273,44 @@ def get_top(list_used, error=0):
         les k hashtags ou utilisateurs qui reviennent le plus
 
     """
-    """if error == 1:
-        label_error = tk.Label(text="Vous n'avez pas rentré un nombre entier. Veuillez recommencer",
-                               highlightcolor='red')
-        label_error.place(relx=0.5, rely=0.45, anchor=tk.CENTER)
-    label_k = tk.Label(text="Jusqu'à combien voulez-vous voir le top ? (veuillez entrer un nombre entier)")
-    label_k.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
-    my_entry = tk.Entry(window)
-    my_entry.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-    if error == 1:
-        ok_button = tk.Button(window, text="OK", command=lambda: get_k(list_used, my_entry, ok_button, label_k, error,
-                                                                       label_error))
-    else:
-        ok_button = tk.Button(window, text="OK", command=lambda: get_k(list_used, my_entry, ok_button, label_k, error))
-    ok_button.place(relx=0.5, rely=0.6, anchor=tk.CENTER)"""
-
-
-def get_k(list_used, entry, button, label, error, label_error=None):
-    """button.destroy()
-    label.destroy()"""
-    try:
-        k = int(entry.get())
-        if error == 1:
-            label_error.destroy()
-    except ValueError:
-        entry.destroy()
-        get_top(list_used, 1)
-    entry.destroy()
     name = []
     occurrence = []
     for i in range(0, k):
-        if list_used == Tweet.tweets_of_users_sorted:
-            top = 'utilisateur'
-            mention = 'tweet'
-            xlabel = 'Utilisateurs'
-            ylabel = 'Nombre de tweets'
-        elif list_used[i][0][0] == '#':
-            top = 'hashtag'
-            mention = 'occurrence'
-            xlabel = 'Hashtags'
-            ylabel = 'Nombre d\'utilisations'
-        elif list_used[i][0][0] == '@':
-            top = 'utilisateur mentionné'
-            mention = 'mention'
-            xlabel = 'Utilisateurs mentionnés'
-            ylabel = 'Nombre de mentions'
-        else:
-            return f'La liste {list_used} n\'est pas compatible avec la fonction top'
-        print(
-            f"Top {i + 1} {top} : {list_used[i][0]} avec {len(list_used[i][1])} {mention}"
-            f"{'s' if len(list_used[i][1]) > 1 else ''}")
-        name.append(list_used[i][0])
-        occurrence.append(len(list_used[i][1]))
+        try:
+            if list_used == Tweet.tweets_of_users_sorted:
+                top = 'utilisateur'
+                mention = 'tweet'
+                xlabel = 'Utilisateurs'
+                ylabel = 'Nombre de tweets'
+            elif list_used == Tweet.used_hashtag_sorted:
+                top = 'hashtag'
+                mention = 'occurrence'
+                xlabel = 'Hashtags'
+                ylabel = 'Nombre d\'utilisations'
+            elif list_used == Tweet.user_mentioned_sorted:
+                top = 'utilisateur mentionné'
+                mention = 'mention'
+                xlabel = 'Utilisateurs mentionnés'
+                ylabel = 'Nombre de mentions'
+            elif list_used == Tweet.topics_sorted:
+                top = 'sujets de discussions'
+                mention = 'mention'
+                xlabel = 'topics mentionnés'
+                ylabel = 'Nombre de mentions'
+            else:
+                return f'La liste {list_used} n\'est pas compatible avec la fonction top'
+
+            print(
+                f"Top {i + 1} {top} : {list_used[i][0]} avec {list_used[i][1]} {mention}"
+                f"{'s' if list_used[i][1] > 1 else ''}")
+            name.append(list_used[i][0])
+            occurrence.append(list_used[i][1])
+        except IndexError:
+            pass
     df = pd.DataFrame({xlabel: name, ylabel: occurrence})
     fig = px.bar(df, x=xlabel, y=ylabel, text=ylabel, title=f'Top {k} des {top}s',
                  labels={xlabel: xlabel, ylabel: ylabel})
     fig.show()
-    """plotly_html = pio.to_html(fig, full_html=True)
-    plot_frame = HtmlFrame(window, horizontal_scrollbar="auto", vertical_scrollbar="auto")
-    plot_frame.set_content(plotly_html)
-    plot_frame.pack(fill="both", expand=True)"""
 
 
 def number_hashtag(hashtag: str):
@@ -455,68 +462,6 @@ def visualize_tweet_time():
     fig.show()
 
 
-"""def button_apparition():
-    button_tweet_time = tk.Button(text='Heures de\npublication', height=5, width=10, command=visualize_tweet_time)
-    button_tweet_time.place(relx=0.8, rely=0.7, anchor=tk.CENTER)
-    button_nb_hashtag = tk.Button(text='Nombre de\npublication\npar hashtag', height=5, width=10,
-                                  command=number_hashtag)
-    button_nb_hashtag.place(relx=0.6, rely=0.3, anchor=tk.CENTER)
-    button_top_hashtag = tk.Button(text='Top hashtags', height=5, width=10,
-                                   command=lambda: get_top(Tweet.used_hashtag_sorted))
-    button_top_hashtag.place(relx=0.4, rely=0.3, anchor=tk.CENTER)
-    button_top_user = tk.Button(text='Top utilisateurs', height=5, width=10,
-                                command=lambda: get_top(Tweet.tweets_of_users_sorted))
-    button_top_user.place(relx=0.4, rely=0.5, anchor=tk.CENTER)
-    button_top_mentioned_user = tk.Button(text='Top utilisateurs\nmentionnés', height=5, width=10,
-                                          command=lambda: get_top(Tweet.user_mentioned_sorted))
-    button_top_mentioned_user.place(relx=0.8, rely=0.5, anchor=tk.CENTER)
-    button_polarity = tk.Button(text='Polarité', height=5, width=10,
-                                command=lambda: show_pie_chart(Tweet.tweets_polarity))
-    button_polarity.place(relx=0.4, rely=0.7, anchor=tk.CENTER)
-    button_subjectivity = tk.Button(text='Subjectivité', height=5, width=10,
-                                    command=lambda: show_pie_chart(Tweet.tweets_objectivity))
-    button_subjectivity.place(relx=0.6, rely=0.7, anchor=tk.CENTER)
-    button_publication = tk.Button(text='Tous les tweets\nd\'un utilisateur', height=5, width=10, )
-    button_publication.place(relx=0.6, rely=0.5, anchor=tk.CENTER)
-
-    label_hashtags = tk.Label(text='Analyse des hashtags :', font=('helvetica', '20'))
-    label_hashtags.place(relx=0.2, rely=0.3, anchor=tk.CENTER)
-
-    label_users = tk.Label(text='Analyse des utilisateurs :', font=('helvetica', '20'))
-    label_users.place(relx=0.2, rely=0.5, anchor=tk.CENTER)
-
-    label_other = tk.Label(text='Autre analyse :', font=('helvetica', '20'))
-    label_other.place(relx=0.2, rely=0.7, anchor=tk.CENTER)
-"""
-
-"""window = tk.Tk()
-window.title('InPoDa')
-window.state('zoomed')
-path = "logo_twitter.png"
-load = Image.open(path)
-render = ImageTk.PhotoImage(load)
-window.iconphoto(False, render)
-label_InPoDa = tk.Label(window, text='InPoDa', font=("Comfortaa", '100'), fg='#00ACEE')
-label_InPoDa.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
-logo = tk.PhotoImage(file="logo.png")
-logo = tk.Label(window, image=logo)
-logo.place(relx=0.8, rely=0.1, anchor=tk.CENTER)
-
-label_welcome = tk.Label(window, text="Bienvenue sur InPoDa, la plateforme d'analyse de données de réseaux sociaux",
-                         font=('Oswaald', '40'), fg='dark blue')
-label_welcome.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
-
-label_file = tk.Label(window, text='Veuillez choisir un fichier contenant les tweets à analyser au format json',
-                      font=('helvetica', '20', 'italic'), fg='dark blue')
-label_file.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
-
-button_file = tk.Button(window, text='Choisir le fichier', height=5, width=10, command=Tweet.instantiate_from_file,
-                        bg='dark blue')
-button_file.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-
-window.mainloop()"""
-
-
 def start():
     # Tweet.instantiate_from_file
     return {
@@ -533,7 +478,10 @@ def process_file(file_path):
 
 
 Tweet.instantiate_from_file()
-show_pie_chart2()
+print(Tweet.topics_sorted)
+print(get_top(Tweet.topics_sorted, 10))
+print(get_top(Tweet.tweets_of_users_sorted, 15))
+
 
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
