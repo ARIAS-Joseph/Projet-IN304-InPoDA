@@ -112,11 +112,9 @@ class Tweet:
                 Tweet.nb_tweets += 1
 
     @staticmethod
-    def instantiate_from_file():
+    def instantiate_from_file(filepath="aitweets.json"):
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
-
-        filepath = filedialog.askopenfilename(filetypes=[('Json files', '*.json')], title='Ouvrir un fichier json')
 
         data = open(filepath, 'r', encoding='UTF-8')
         list_tweets = [js.loads(line) for line in data]
@@ -456,14 +454,17 @@ def visualize_tweet_time():
     time = list(Tweet.tweets_time.keys())
     nb_tweets = list(Tweet.tweets_time.values())
     df = pd.DataFrame({'Heure': time, 'Nombre de Tweets': nb_tweets})
-    fig = px.line(df, x='Heure', y='Nombre de Tweets', markers=True, line_shape='linear',
+    plot_time = px.line(df, x='Heure', y='Nombre de Tweets', markers=True, line_shape='linear',
                   labels={'Heure': 'Heure', 'Nombre de Tweets': 'Nombre de Tweets'},
                   title='Nombre de Tweets par Heure')
-    fig.show()
+    plot_time.show()
 
 
 def start():
-    # Tweet.instantiate_from_file
+    """print(file)
+    interface_init.close()
+    interface.launch()"""
+    Tweet.instantiate_from_file()
     return {
         welcome_label: gr.Label(visible=False),
         analyze_button: gr.Button(visible=False),
@@ -471,17 +472,18 @@ def start():
         analysis: gr.Radio(visible=True)
     }
 
+def change_r(choice:str):
+    """ if choice == Radio_Choices[0]:
+        return {plot_time : gr.Plot(visible = False)}"""
+    if choice == Radio_Choices[2]:
+        #return {plot_time : gr.Plot(value=visualize_tweet_time, visible = True) }
+        visualize_tweet_time()
 
-def process_file(file_path):
-    with open(file_path, 'r') as file:
-        pass
-
-
-Tweet.instantiate_from_file()
-print(Tweet.topics_sorted)
+"""print(Tweet.topics_sorted)
 print(get_top(Tweet.topics_sorted, 10))
-print(get_top(Tweet.tweets_of_users_sorted, 15))
+print(get_top(Tweet.tweets_of_users_sorted, 15))"""
 
+Radio_Choices = ["Masquer", "Top", "Heures", "Polarité", "Subjectivité", "Nb utilisation d'un #", "Tweets d'un utilisateur"]
 
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
@@ -490,13 +492,23 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     analyze_file = gr.File(file_count='multiple', file_types=['.json'], interactive=True,
                            label="Sélectionnez un ou des fichiers à analyser")
     analyze_button = gr.Button(value="Lancer l'analyse")
-    analysis = gr.Radio(
-        ["Top", "Heures", "Polarité", "Subjectivité", "Nombres d'utilisation d'un hashtag", "Tweets d'un utilisateur"],
-        label="Analyses", info="Que voulez-vous analyser ?", visible=False)
+    analysis = gr.Radio(choices=Radio_Choices,
+     value ="Masquer",
+      label="Analyses",
+      info="Que voulez-vous analyser ?", 
+      visible = False,
+      interactive = True)
+    plot_time = gr.Plot(visible=False)
+    analysis.change(change_r, inputs=[analysis], outputs= [plot_time])
+    interface.load(change_r, inputs=[analysis],outputs=[plot_time])
     analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
 
-
 interface.launch()
+"""interface_init = gr.Interface(
+    fn=start,
+    inputs=["file"],
+    outputs=None)
+interface_init.launch()"""
 
 """print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
 print(get_top(Tweet.user_mentioned_sorted, 15))
