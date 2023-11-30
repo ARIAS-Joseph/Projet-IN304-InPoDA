@@ -51,6 +51,7 @@ class Tweet:
     # subjectifs
     topics = {}
     tweets_localization = []  # liste de toutes les localisations des tweets
+    topics_sorted = []
     tweets_time = {str(i).zfill(2): 0 for i in range(24)}  # création des clés dans le dictionnaire dans l'ordre
     # croissant pour améliorer le graphique de la fonction visualize_time
     nb_tweets = 0
@@ -225,7 +226,8 @@ class Tweet:
                                                    'artificialintelligencetechnology'],
                        'machine learning': ['machinelearn', 'machinelearning', 'ml', 'deeplearning', 'learning',
                                             'machine', 'dl', 'nlp', 'machinelea', 'datascien', 'machi', 'machinelearni'
-                                            'deeple', 'mach', 'machinelearnin', 'tensorflow', 'deepneuralnetworks',
+                                                                                                        'deeple',
+                                            'mach', 'machinelearnin', 'tensorflow', 'deepneuralnetworks',
                                             'machinele', 'neuralnetworks', 'machin', 'machinelear', 'sciketlearn',
                                             'deeplearningframework', '100daysofmlcode', 'machinelearni',
                                             'machine learning', 'deeple'],
@@ -367,7 +369,6 @@ def show_pie_chart(list_used: list):
 
 
 def show_pie_chart2():
-
     df = pd.DataFrame(Tweet.compass, columns=['Polarité', 'Subjectivité'])
     fig = px.scatter(df, x='Subjectivité', y='Polarité',
                      color='Polarité', color_continuous_scale='RdBu',
@@ -389,7 +390,7 @@ def show_pie_chart2():
     fig.update_xaxes(showgrid=False, tickvals=[0, 0.5, 1], ticktext=['0', '0.5', '1'], tickmode='array')
     fig.update_yaxes(showgrid=False, tickvals=[-1, 0, 1], ticktext=['-1', '0', '1'], tickmode='array')
 
-    fig.show()
+    return fig
 
 
 def world_map():
@@ -455,9 +456,9 @@ def visualize_tweet_time():
     nb_tweets = list(Tweet.tweets_time.values())
     df = pd.DataFrame({'Heure': time, 'Nombre de Tweets': nb_tweets})
     plot_time = px.line(df, x='Heure', y='Nombre de Tweets', markers=True, line_shape='linear',
-                  labels={'Heure': 'Heure', 'Nombre de Tweets': 'Nombre de Tweets'},
-                  title='Nombre de Tweets par Heure')
-    plot_time.show()
+                        labels={'Heure': 'Heure', 'Nombre de Tweets': 'Nombre de Tweets'},
+                        title='Nombre de Tweets par Heure')
+    return plot_time
 
 
 def start():
@@ -472,18 +473,22 @@ def start():
         analysis: gr.Radio(visible=True)
     }
 
-def change_r(choice:str):
+
+def change_r(choice: str):
     """ if choice == Radio_Choices[0]:
         return {plot_time : gr.Plot(visible = False)}"""
     if choice == Radio_Choices[2]:
-        #return {plot_time : gr.Plot(value=visualize_tweet_time, visible = True) }
-        visualize_tweet_time()
+        return {plot_time: gr.Plot(value=visualize_tweet_time(), visible=True)}
+    if choice == Radio_Choices[3]:
+        return {plot_time: gr.Plot(value=show_pie_chart2(), visible=True)}
+
 
 """print(Tweet.topics_sorted)
 print(get_top(Tweet.topics_sorted, 10))
 print(get_top(Tweet.tweets_of_users_sorted, 15))"""
 
-Radio_Choices = ["Masquer", "Top", "Heures", "Polarité", "Subjectivité", "Nb utilisation d'un #", "Tweets d'un utilisateur"]
+Radio_Choices = ["Masquer", "Top", "Heures", "Polarité/Subjectivité", "Nb utilisation d'un #",
+                 "Tweets d'un utilisateur"]
 
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
@@ -493,14 +498,14 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
                            label="Sélectionnez un ou des fichiers à analyser")
     analyze_button = gr.Button(value="Lancer l'analyse")
     analysis = gr.Radio(choices=Radio_Choices,
-     value ="Masquer",
-      label="Analyses",
-      info="Que voulez-vous analyser ?", 
-      visible = False,
-      interactive = True)
+                        value="Masquer",
+                        label="Analyses",
+                        info="Que voulez-vous analyser ?",
+                        visible=False,
+                        interactive=True)
     plot_time = gr.Plot(visible=False)
-    analysis.change(change_r, inputs=[analysis], outputs= [plot_time])
-    interface.load(change_r, inputs=[analysis],outputs=[plot_time])
+    analysis.change(change_r, inputs=[analysis], outputs=[plot_time])
+    interface.load(change_r, inputs=[analysis], outputs=[plot_time])
     analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
 
 interface.launch()
