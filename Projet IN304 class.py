@@ -260,7 +260,7 @@ class Tweet:
             Tweet.tweets_of_users[self.author] = 1
 
 
-def get_top(list_used, k):
+def get_top(list_used=Tweet.tweets_of_users_sorted, k=10):
     """Top k hashtags ou Top k utilisateurs mentionnés
 
     Fonction qui affiche les top k hashtags ou les tops k utilisateurs mentionnés
@@ -310,7 +310,7 @@ def get_top(list_used, k):
     df = pd.DataFrame({xlabel: name, ylabel: occurrence})
     fig = px.bar(df, x=xlabel, y=ylabel, text=ylabel, title=f'Top {k} des {top}s',
                  labels={xlabel: xlabel, ylabel: ylabel})
-    fig.show()
+    return fig
 
 
 def number_hashtag(hashtag: str):
@@ -475,13 +475,19 @@ def start():
 
 
 def change_r(choice: str):
-    """ if choice == Radio_Choices[0]:
-        return {plot_time : gr.Plot(visible = False)}"""
+    if choice == Radio_Choices[0]:
+        return {plot : gr.Plot(visible = False)}
+    if choice == Radio_Choices[1]:
+        change_slider()
     if choice == Radio_Choices[2]:
-        return {plot_time: gr.Plot(value=visualize_tweet_time(), visible=True)}
+        return {plot: gr.Plot(value=visualize_tweet_time(), visible=True)}
     if choice == Radio_Choices[3]:
-        return {plot_time: gr.Plot(value=show_pie_chart2(), visible=True)}
-
+        return {plot: gr.Plot(value=show_pie_chart2(), visible=True)}
+    
+def change_slider(value:int):
+    val = value if value != 0 else 10 
+    return {plot: gr.Plot(value=get_top(k=value), visible=True), 
+    slider : gr.Slider(1,50,val, step=1,label="Les Top combien voulez-vous voir ?", info="Déplacez le curseur", visible=True, interactive=True)}
 
 """print(Tweet.topics_sorted)
 print(get_top(Tweet.topics_sorted, 10))
@@ -503,9 +509,11 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
                         info="Que voulez-vous analyser ?",
                         visible=False,
                         interactive=True)
-    plot_time = gr.Plot(visible=False)
-    analysis.change(change_r, inputs=[analysis], outputs=[plot_time])
-    interface.load(change_r, inputs=[analysis], outputs=[plot_time])
+    plot = gr.Plot(visible=False)
+    slider = gr.Slider (visible=False)
+    slider.change(change_r,inputs=[analysis,slider],outputs=plot)
+    analysis.change(change_r, inputs=[analysis], outputs=[plot])
+    interface.load(change_r, inputs=[analysis], outputs=[plot])
     analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
 
 interface.launch()
