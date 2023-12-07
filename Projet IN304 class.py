@@ -472,36 +472,94 @@ def start():
         analyze_file: gr.File(visible=False),
         analysis: gr.Radio(visible=True)
     }
-
-
-def change_r(choice: str):
-    if choice == Radio_Choices[-1]:
-        return {plot : gr.Plot(visible = False)}
-    if choice == Radio_Choices[0]:
-        #change_slider()
-        return {plot: gr.Plot(value=get_top(list_used = Tweet.used_hashtag_sorted,k=10), visible=True)}
-    if choice == Radio_Choices[1]:
-        return {plot : gr.Plot(value=get_top(list_used= Tweet.tweets_of_users_sorted, k=10), visible=True)}
-    if choice == Radio_Choices[2]:
-        return {plot : gr.Plot(value=get_top(list_used= Tweet.user_mentioned_sorted, k=10), visible=True)}
-    if choice == Radio_Choices[3]:
-        return {plot : gr.Plot(value=get_top(list_used= Tweet.topics_sorted, k=10), visible=True)}
-    if choice == Radio_Choices[4]:
-        return {plot: gr.Plot(value=visualize_tweet_time(), visible=True)}
-    if choice == Radio_Choices[5]:
-        return {plot: gr.Plot(value=show_pie_chart2(), visible=True)}
     
+def change_r(choice:str):
+    if choice == Radio_Choices[-1]:
+        return {plot : gr.Plot(visible = False),
+        top: gr.Radio(visible=False),
+        others : gr.Radio(visible=False),
+        publi : gr.Radio(visible=False),
+        act : gr.Radio(visible = False)}
+
+    if choice == Radio_Choices[0]:
+        return {top: gr.Radio(visible=True),
+        others : gr.Radio(visible=False),
+        publi : gr.Radio(visible=False),
+        act : gr.Radio(visible = False),
+        plot : gr.Plot(visible = False)}
+
+    if choice == Radio_Choices[1]:
+        return {act : gr.Radio(visible = True),
+        top : gr.Radio(visible=False),
+        others : gr.Radio(visible=False),
+        publi : gr.Radio(visible=False),
+        plot : gr.Plot(visible = False)}
+
+    if choice == Radio_Choices[2]:
+        return {publi : gr.Radio(visible=True),
+        act : gr.Radio(visible = False),
+        top : gr.Radio(visible=False),
+        others : gr.Radio(visible=False),
+        plot : gr.Plot(visible = False)}
+
+    if choice == Radio_Choices[3]:
+        return {others : gr.Radio(visible=True),
+        publi : gr.Radio(visible=False),
+        act : gr.Radio(visible = False),
+        top : gr.Radio(visible=False),
+        plot : gr.Plot(visible = False)}
+
+def change_top(choice:str):
+    if choice == "Top hashtags":
+        return {plot: gr.Plot(value=get_top(list_used = Tweet.used_hashtag_sorted,k=10), visible=True)}
+    if choice == "Top utilisateurs":
+        return {plot : gr.Plot(value=get_top(list_used= Tweet.tweets_of_users_sorted, k=10), visible=True)}
+    if choice == "Top utilisateurs mentionnés":
+        return {plot : gr.Plot(value=get_top(list_used= Tweet.user_mentioned_sorted, k=10), visible=True)}
+    if choice == "Top topics":
+        return {plot : gr.Plot(value=get_top(list_used= Tweet.topics_sorted, k=10), visible=True)}
+
+def change_act(choice:str):
+    if choice == "Nombre de publications par utilisateur":
+        pass
+        #return {plot  : gr.Plot(visible=True)} #ajouter value
+    if choice == "Tous les Tweets d'un utilisateur":
+        pass
+        #return {plot  : gr.Plot(visible=True)} #ajouter value
+    if choice == "Tous les utilisateurs mentionnés par un utilisateur":
+        pass
+        #return {plot  : gr.Plot(visible=True)} #ajouter value
+
+def change_publi(choice:str):
+    if choice == "Nombre de publications par topic":
+        pass
+        #return {plot  : gr.Plot(visible=True)} #ajouter value
+    if choice == "Nombre de publications par hashtag":
+        pass
+        #return {plot  : gr.Plot(visible=True)} #ajouter value
+    if choice == "Tous les utilisateurs d'un hashtag":
+        pass
+        #return {plot  : gr.Plot(visible=True)} #ajouter value
+
+def change_others(choice:str):
+    if choice == "Heures de Tweet":
+        return {plot: gr.Plot(value=visualize_tweet_time(), visible=True)}
+    if choice == "Polarité/Subjectivité":
+        return {plot: gr.Plot(value=show_pie_chart2(), visible=True)}
+    if choice == "Répartition mondiale":
+        pass
+        #return {plot  : gr.Plot(visible=True)} #ajouter value = world_map()
+
 """def change_slider(value:int):
     val = value if value != 0 else 10 
     return {plot: gr.Plot(value=get_top(k=value), visible=True), 
     slider : gr.Slider(1,50,val, step=1,label="Les Top combien voulez-vous voir ?", info="Déplacez le curseur", visible=True, interactive=True)}"""
 
-"""print(Tweet.topics_sorted)
-print(get_top(Tweet.topics_sorted, 10))
-print(get_top(Tweet.tweets_of_users_sorted, 15))"""
-
-Radio_Choices = ["Top hashtags", "Top utilisateurs", "Top utilisateurs mentionnés", "Top topics", "Heures", "Polarité/Subjectivité", "Nb utilisation d'un #",
-                 "Tweets d'un utilisateur", "Masquer"]
+Radio_Choices = ["Top (4)", 
+"Activité d'un utilisateur (3)",
+"Nb publications par catégorie (3)",
+"Autre (3)", 
+"Masquer"]
 
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
@@ -510,32 +568,34 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     analyze_file = gr.File(file_count='multiple', file_types=['.json'], interactive=True,
                            label="Sélectionnez un ou des fichiers à analyser")
     analyze_button = gr.Button(value="Lancer l'analyse")
+    
     analysis = gr.Radio(choices=Radio_Choices,
                         value="Masquer",
                         label="Analyses",
                         info="Que voulez-vous analyser ?",
                         visible=False,
                         interactive=True)
+    top = gr.Radio(choices = ["Top hashtags", "Top utilisateurs", "Top utilisateurs mentionnés", "Top topics"],
+                    label = "Top", visible = False, interactive =True)
+    act = gr.Radio(choices=["Nombre de publications par utilisateur","Tous les Tweets d'un utilisateur", "Tous les utilisateurs mentionnés par un utilisateur"], 
+                    label ="Activité", visible=False,interactive=True)
+    publi = gr.Radio(choices=["Nombre de publications par topic", "Nombre de publications par hashtag", "Tous les utilisateurs d'un hashtag"], 
+                    label ="Catégories", visible=False,interactive=True)
+    others = gr.Radio(choices=["Heures de Tweet", "Polarité/Subjectivité", "Répartition mondiale"], 
+                    label ="Autres", visible=False,interactive=True)
+    
     plot = gr.Plot(visible=False)
     #slider = gr.Slider (visible=False)
     #slider.change(change_r,inputs=[analysis,slider],outputs=plot)
-    analysis.change(change_r, inputs=[analysis], outputs=[plot])
+    analysis.change(change_r, inputs=[analysis], outputs=[top, act, publi, others, plot])
+    top.change(change_top, inputs =[top], outputs= [plot])
+    act.change(change_act, inputs =[act], outputs= [plot])
+    publi.change(change_publi, inputs =[publi], outputs= [plot])
+    others.change(change_others, inputs =[others], outputs= [plot])
     interface.load(change_r, inputs=[analysis], outputs=[plot])
     analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
 
 interface.launch()
-"""interface_init = gr.Interface(
-    fn=start,
-    inputs=["file"],
-    outputs=None)
-interface_init.launch()"""
-
-"""print(f"Nombre de tweets analysés: {len(Tweet.all_tweets) + 1}")
-print(get_top(Tweet.user_mentioned_sorted, 15))
-print(get_top(Tweet.used_hashtag_sorted, 15))
-print(get_top(Tweet.tweets_of_users_sorted, 15))
-print(number_hashtag("#AI"))
-print(publication_author('Chumlee'))"""
 
 """world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
 # console affiche l'avancement de cette dernière"""
