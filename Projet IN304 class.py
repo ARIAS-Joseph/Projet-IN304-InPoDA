@@ -475,26 +475,33 @@ def start():
 
 
 def change_r(choice: str):
-    if choice == Radio_Choices[0]:
+    if choice == Radio_Choices[-1]:
         return {plot : gr.Plot(visible = False)}
+    if choice == Radio_Choices[0]:
+        #change_slider()
+        return {plot: gr.Plot(value=get_top(list_used = Tweet.used_hashtag_sorted,k=10), visible=True)}
     if choice == Radio_Choices[1]:
-        change_slider()
+        return {plot : gr.Plot(value=get_top(list_used= Tweet.tweets_of_users_sorted, k=10), visible=True)}
     if choice == Radio_Choices[2]:
-        return {plot: gr.Plot(value=visualize_tweet_time(), visible=True)}
+        return {plot : gr.Plot(value=get_top(list_used= Tweet.user_mentioned_sorted, k=10), visible=True)}
     if choice == Radio_Choices[3]:
+        return {plot : gr.Plot(value=get_top(list_used= Tweet.topics_sorted, k=10), visible=True)}
+    if choice == Radio_Choices[4]:
+        return {plot: gr.Plot(value=visualize_tweet_time(), visible=True)}
+    if choice == Radio_Choices[5]:
         return {plot: gr.Plot(value=show_pie_chart2(), visible=True)}
     
-def change_slider(value:int):
+"""def change_slider(value:int):
     val = value if value != 0 else 10 
     return {plot: gr.Plot(value=get_top(k=value), visible=True), 
-    slider : gr.Slider(1,50,val, step=1,label="Les Top combien voulez-vous voir ?", info="Déplacez le curseur", visible=True, interactive=True)}
+    slider : gr.Slider(1,50,val, step=1,label="Les Top combien voulez-vous voir ?", info="Déplacez le curseur", visible=True, interactive=True)}"""
 
 """print(Tweet.topics_sorted)
 print(get_top(Tweet.topics_sorted, 10))
 print(get_top(Tweet.tweets_of_users_sorted, 15))"""
 
-Radio_Choices = ["Masquer", "Top", "Heures", "Polarité/Subjectivité", "Nb utilisation d'un #",
-                 "Tweets d'un utilisateur"]
+Radio_Choices = ["Top hashtags", "Top utilisateurs", "Top utilisateurs mentionnés", "Top topics", "Heures", "Polarité/Subjectivité", "Nb utilisation d'un #",
+                 "Tweets d'un utilisateur", "Masquer"]
 
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
@@ -510,8 +517,8 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
                         visible=False,
                         interactive=True)
     plot = gr.Plot(visible=False)
-    slider = gr.Slider (visible=False)
-    slider.change(change_r,inputs=[analysis,slider],outputs=plot)
+    #slider = gr.Slider (visible=False)
+    #slider.change(change_r,inputs=[analysis,slider],outputs=plot)
     analysis.change(change_r, inputs=[analysis], outputs=[plot])
     interface.load(change_r, inputs=[analysis], outputs=[plot])
     analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
