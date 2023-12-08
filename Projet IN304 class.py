@@ -476,37 +476,37 @@ def start():
 def change_r(choice:str):
     if choice == Radio_Choices[-1]:
         return {plot : gr.Plot(visible = False),
-        top: gr.Radio(visible=False),
-        others : gr.Radio(visible=False),
-        publi : gr.Radio(visible=False),
-        act : gr.Radio(visible = False)}
+        top: gr.Dropdown(visible=False),
+        act : gr.Dropdown(visible = False),
+        publi : gr.Dropdown(visible=False),
+        others : gr.Dropdown(visible=False)}
 
     if choice == Radio_Choices[0]:
-        return {top: gr.Radio(visible=True),
-        others : gr.Radio(visible=False),
-        publi : gr.Radio(visible=False),
-        act : gr.Radio(visible = False),
+        return {top: gr.Dropdown(visible=True),
+        act : gr.Dropdown(visible = False),
+        publi : gr.Dropdown(visible=False),
+        others : gr.Dropdown(visible=False),
         plot : gr.Plot(visible = False)}
 
     if choice == Radio_Choices[1]:
-        return {act : gr.Radio(visible = True),
-        top : gr.Radio(visible=False),
-        others : gr.Radio(visible=False),
-        publi : gr.Radio(visible=False),
+        return {act : gr.Dropdown(visible = True),
+        top: gr.Dropdown(visible=False),
+        publi : gr.Dropdown(visible=False),
+        others : gr.Dropdown(visible=False),
         plot : gr.Plot(visible = False)}
 
     if choice == Radio_Choices[2]:
-        return {publi : gr.Radio(visible=True),
-        act : gr.Radio(visible = False),
-        top : gr.Radio(visible=False),
-        others : gr.Radio(visible=False),
+        return {publi : gr.Dropdown(visible=True),
+        top: gr.Dropdown(visible=False),
+        act : gr.Dropdown(visible = False),
+        others : gr.Dropdown(visible=False),
         plot : gr.Plot(visible = False)}
 
     if choice == Radio_Choices[3]:
-        return {others : gr.Radio(visible=True),
-        publi : gr.Radio(visible=False),
-        act : gr.Radio(visible = False),
-        top : gr.Radio(visible=False),
+        return {others : gr.Dropdown(visible=True),
+        top: gr.Dropdown(visible=False),
+        act : gr.Dropdown(visible = False),
+        publi : gr.Dropdown(visible=False),
         plot : gr.Plot(visible = False)}
 
 def change_top(choice:str):
@@ -575,20 +575,20 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
                         info="Que voulez-vous analyser ?",
                         visible=False,
                         interactive=True)
-    top = gr.Radio(choices = ["Top hashtags", "Top utilisateurs", "Top utilisateurs mentionnés", "Top topics"],
-                    label = "Top", visible = False, interactive =True)
-    act = gr.Radio(choices=["Nombre de publications par utilisateur","Tous les Tweets d'un utilisateur", "Tous les utilisateurs mentionnés par un utilisateur"], 
-                    label ="Activité", visible=False,interactive=True)
-    publi = gr.Radio(choices=["Nombre de publications par topic", "Nombre de publications par hashtag", "Tous les utilisateurs d'un hashtag"], 
-                    label ="Catégories", visible=False,interactive=True)
-    others = gr.Radio(choices=["Heures de Tweet", "Polarité/Subjectivité", "Répartition mondiale"], 
-                    label ="Autres", visible=False,interactive=True)
+    top  = gr.Dropdown(choices=["Top hashtags", "Top utilisateurs", "Top utilisateurs mentionnés", "Top topics"],
+                        label = "Top", info = "Veuillez sélectionner l'élément dont vous voulez voir le Top :", visible = False)
+    act = gr.Dropdown(choices=["Nombre de publications par utilisateur","Tous les Tweets d'un utilisateur", "Tous les utilisateurs mentionnés par un utilisateur"], 
+                        label ="Activité",info="Veuillez sélectionner l'activité que vous souhaitez observer :", visible=False)
+    publi = gr.Dropdown(choices=["Nombre de publications par topic", "Nombre de publications par hashtag", "Tous les utilisateurs d'un hashtag"], 
+                        label ="Catégories",info="Veuillez sélectionner les publications que vous voulez analyser :", visible=False)
+    others = gr.Dropdown(choices=["Heures de Tweet", "Polarité/Subjectivité", "Répartition mondiale"], 
+                        label ="Autres",info ="Veuillez sélectionner ce que vous souhaitez analyser :", visible=False)
     
     plot = gr.Plot(visible=False)
     #slider = gr.Slider (visible=False)
     #slider.change(change_r,inputs=[analysis,slider],outputs=plot)
     analysis.change(change_r, inputs=[analysis], outputs=[top, act, publi, others, plot])
-    top.change(change_top, inputs =[top], outputs= [plot])
+    top.change(change_top, inputs=[top], outputs=[plot])
     act.change(change_act, inputs =[act], outputs= [plot])
     publi.change(change_publi, inputs =[publi], outputs= [plot])
     others.change(change_others, inputs =[others], outputs= [plot])
