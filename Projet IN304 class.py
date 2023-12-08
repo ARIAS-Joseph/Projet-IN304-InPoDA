@@ -532,14 +532,20 @@ def change_act(choice:str):
 
 def change_publi(choice:str):
     if choice == "Nombre de publications par topic":
-        pass
+        return {topic : gr.Textbox(visible=True)}
         #return {plot  : gr.Plot(visible=True)} #ajouter value
     if choice == "Nombre de publications par hashtag":
-        pass
+        return {hashtag : gr.Textbox(visible=True)}
         #return {plot  : gr.Plot(visible=True)} #ajouter value
     if choice == "Tous les utilisateurs d'un hashtag":
-        pass
+        return {hashtag : gr.Textbox(visible=True)}
         #return {plot  : gr.Plot(visible=True)} #ajouter value
+
+def change_hashtag(hashtag:str):
+        pass
+
+def change_topic(topic:str):
+    pass
 
 def change_others(choice:str):
     if choice == "Heures de Tweet":
@@ -584,14 +590,18 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     others = gr.Dropdown(choices=["Heures de Tweet", "Polarité/Subjectivité", "Répartition mondiale"], 
                         label ="Autres",info ="Veuillez sélectionner ce que vous souhaitez analyser :", visible=False)
     
+    hashtag = gr.Textbox(info="Rentrez le hashtag", visible = False, interactive = True)
+    topic = gr.Textbox(info= "Rentrez le topic :", visible =False, interactive = True)
     plot = gr.Plot(visible=False)
     #slider = gr.Slider (visible=False)
     #slider.change(change_r,inputs=[analysis,slider],outputs=plot)
     analysis.change(change_r, inputs=[analysis], outputs=[top, act, publi, others, plot])
     top.change(change_top, inputs=[top], outputs=[plot])
     act.change(change_act, inputs =[act], outputs= [plot])
-    publi.change(change_publi, inputs =[publi], outputs= [plot])
+    publi.change(change_publi, inputs =[publi], outputs= [hashtag,topic])
     others.change(change_others, inputs =[others], outputs= [plot])
+    hashtag.change(change_hashtag, inputs=[hashtag], outputs=[plot])
+    topic.change(change_topic, inputs=[topic], outputs=[plot])
     interface.load(change_r, inputs=[analysis], outputs=[plot])
     analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
 
