@@ -41,6 +41,7 @@ class Tweet:
     tweets_of_users = {}  # dictionnaire avec le nom de l'utilisateur en clé et la liste des tweets de l'utilisateur en
     # valeur
     tweets_of_users_sorted = []
+    tweets_users = []
     tweets_polarity = [0, 0, 0]  # avec en indice 0 le nombre de tweets négatifs, en indice 1 le nombre de tweets
     # neutres et en indice 2 le nombre de tweets positifs
     tweets_objectivity = [0, 0]  # avec en indice 0 le nombre de tweets objectifs et en indice 1 le nombre de tweets
@@ -98,10 +99,10 @@ class Tweet:
                                                      reverse=True)  # création d'une liste
                 # des utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mentions
                 # de l'utilisateur
-                Tweet.tweets_of_users_sorted = sorted(Tweet.tweets_of_users.items(),
-                                                      key=operator.itemgetter(1),
-                                                      reverse=True)  # création d'une liste des utilisateurs triée par
-                # ordre décroissant du nombre de tweets de l'utilisateur
+                Tweet.tweets_of_users_sorted = dict(sorted(Tweet.tweets_of_users.items(), key=lambda x: len(x[1]),
+                                                           reverse=True))  # création d'une liste des utilisateurs triée
+                # par ordre décroissant du nombre de tweets de l'utilisateur
+                Tweet.tweets_users = [(key, len(tweets)) for key, tweets in Tweet.tweets_of_users_sorted.items()]
                 Tweet.topics_sorted = sorted(Tweet.topics.items(), key=operator.itemgetter(1), reverse=True)
                 if self.localization != "":
                     Tweet.tweets_localization.append(self.localization)
@@ -252,12 +253,12 @@ class Tweet:
         """Fonction qui ajoute le tweet à la liste des tweets d'un utilisateur
         """
         try:
-            Tweet.tweets_of_users[self.author] += 1
+            Tweet.tweets_of_users[self.author].append(self.texte)
         except KeyError:
-            Tweet.tweets_of_users[self.author] = 1
+            Tweet.tweets_of_users[self.author] = [self.texte]
 
 
-def get_top(list_used=Tweet.tweets_of_users_sorted, k=10):
+def get_top(list_used=Tweet.used_hashtag_sorted, k=10):
     """Top k hashtags ou Top k utilisateurs mentionnés
 
     Fonction qui affiche les top k hashtags ou les tops k utilisateurs mentionnés
@@ -272,9 +273,10 @@ def get_top(list_used=Tweet.tweets_of_users_sorted, k=10):
     """
     name = []
     occurrence = []
+
     for i in range(0, k):
         try:
-            if list_used == Tweet.tweets_of_users_sorted:
+            if list_used == Tweet.tweets_users:
                 top = 'utilisateur'
                 mention = 'tweet'
                 x_label = 'Utilisateurs'
@@ -341,10 +343,22 @@ def publication_author(author: str):
     if author[0] != '@':
         author = '@' + author
     try:
+        i = 1
         for tweet in Tweet.tweets_of_users[author]:
-            print(tweet.texte)
+            print(f'Tweet {i}:\n{tweet}\n')
+            i += 1
     except KeyError:
-        print('Cet utilisateur n\'a pas tweeté')
+        print('Cet utilisateur n\'a pas tweeté ou n\'existe pas')
+
+
+def number_publication(author: str):
+
+    if author[0] != '@':
+        author = '@' + author
+    try:
+        print(f'{author} a tweeté {len(Tweet.tweets_of_users[author])} fois')
+    except KeyError:
+        print('Cet utilisateur n\'a pas tweeté ou n\'existe pas')
 
 
 def show_pie_chart(list_used: list):
@@ -397,7 +411,6 @@ def world_map():
     global analyse_finished
     while analyse_finished != 1:
         time.sleep(1)
-        print('zzzzzz')
     debut = time.time()
     geolocator = Nominatim(user_agent="Géolocalisation_tweets")
     tweet_coordinates = {}
@@ -520,7 +533,7 @@ def change_top(choice: str):
     if choice == "Top hashtags":
         return {plot: gr.Plot(value=get_top(list_used=Tweet.used_hashtag_sorted, k=10), visible=True)}
     if choice == "Top utilisateurs":
-        return {plot: gr.Plot(value=get_top(list_used=Tweet.tweets_of_users_sorted, k=10), visible=True)}
+        return {plot: gr.Plot(value=get_top(list_used=Tweet.tweets_users, k=10), visible=True)}
     if choice == "Top utilisateurs mentionnés":
         return {plot: gr.Plot(value=get_top(list_used=Tweet.user_mentioned_sorted, k=10), visible=True)}
     if choice == "Top topics":
@@ -574,7 +587,6 @@ def change_slider(value: int):
             slider: gr.Slider(1, 50, val, step=1, label="Les Top combien voulez-vous voir ?",
                               info="Déplacez le curseur", visible=True, interactive=True)}
 
-
 Radio_Choices = ["Top (4)",
                  "Activité d'un utilisateur (3)",
                  "Nb publications par catégorie (3)",
@@ -627,11 +639,8 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
 if __name__ == '__main__':
     thread_map = threading.Thread(target=world_map)
     thread_map.start()
-    print('pas bmloqué')
-
 
     interface.launch()
-
 
 """world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
 # console affiche l'avancement de cette dernière"""
