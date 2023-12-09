@@ -18,21 +18,17 @@ import folium
 from collections import Counter
 from geopy.geocoders import Nominatim
 import regex as re
-import plotly
 import plotly.express as px
-from plotly.subplots import make_subplots
-import plotly.graph_objs as go
-import plotly.figure_factory as ff
 import pandas as pd
-from tkinter import filedialog
 import os
 import emoji
-import plotly.io as pio
 import gradio as gr
 import operator
-import asyncio
 import threading
-import concurrent.futures
+
+avancement_map = 0
+fin_map = 0
+analyse_finished = 0
 
 
 class Tweet:
@@ -116,7 +112,7 @@ class Tweet:
     def instantiate_from_file(filepath="aitweets.json"):
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
-
+        global analyse_finished
         data = open(filepath, 'r', encoding='UTF-8')
         list_tweets = [js.loads(line) for line in data]
 
@@ -141,6 +137,7 @@ class Tweet:
             Tweet(tweet)
 
         data.close()
+        analyse_finished = 1
 
     @staticmethod
     def fill_zone_atterrissage(filepath, list_tweets):
@@ -280,23 +277,23 @@ def get_top(list_used=Tweet.tweets_of_users_sorted, k=10):
             if list_used == Tweet.tweets_of_users_sorted:
                 top = 'utilisateur'
                 mention = 'tweet'
-                xlabel = 'Utilisateurs'
-                ylabel = 'Nombre de tweets'
+                x_label = 'Utilisateurs'
+                y_label = 'Nombre de tweets'
             elif list_used == Tweet.used_hashtag_sorted:
                 top = 'hashtag'
                 mention = 'occurrence'
-                xlabel = 'Hashtags'
-                ylabel = 'Nombre d\'utilisations'
+                x_label = 'Hashtags'
+                y_label = 'Nombre d\'utilisations'
             elif list_used == Tweet.user_mentioned_sorted:
                 top = 'utilisateur mentionné'
                 mention = 'mention'
-                xlabel = 'Utilisateurs mentionnés'
-                ylabel = 'Nombre de mentions'
+                x_label = 'Utilisateurs mentionnés'
+                y_label = 'Nombre de mentions'
             elif list_used == Tweet.topics_sorted:
                 top = 'sujets de discussions'
                 mention = 'mention'
-                xlabel = 'topics mentionnés'
-                ylabel = 'Nombre de mentions'
+                x_label = 'topics mentionnés'
+                y_label = 'Nombre de mentions'
             else:
                 return f'La liste {list_used} n\'est pas compatible avec la fonction top'
 
@@ -307,9 +304,9 @@ def get_top(list_used=Tweet.tweets_of_users_sorted, k=10):
             occurrence.append(list_used[i][1])
         except IndexError:
             pass
-    df = pd.DataFrame({xlabel: name, ylabel: occurrence})
-    fig = px.bar(df, x=xlabel, y=ylabel, text=ylabel, title=f'Top {k} des {top}s',
-                 labels={xlabel: xlabel, ylabel: ylabel})
+    df = pd.DataFrame({x_label: name, y_label: occurrence})
+    fig = px.bar(df, x=x_label, y=y_label, text=y_label, title=f'Top {k} des {top}s',
+                 labels={x_label: x_label, y_label: y_label})
     return fig
 
 
@@ -394,10 +391,17 @@ def show_pie_chart2():
 
 
 def world_map():
+    print('World Map')
+    global fin_map
+    global avancement_map
+    global analyse_finished
+    while analyse_finished != 1:
+        time.sleep(1)
+        print('zzzzzz')
     debut = time.time()
     geolocator = Nominatim(user_agent="Géolocalisation_tweets")
     tweet_coordinates = {}
-    i = 1
+    avancement_map = 1
     for location in Tweet.tweets_localization:
         try:
             location = location.strip()
@@ -405,17 +409,17 @@ def world_map():
                 location_data = geolocator.geocode(location)
                 if location_data:
                     tweet_coordinates[location] = (location_data.latitude, location_data.longitude, location)
-            if i % 10 == 0 or i == 1:
-                print(i, '/', len(Tweet.tweets_localization))
-            i += 1
+            if avancement_map % 10 == 0 or avancement_map == 1:
+                print(avancement_map, '/', len(Tweet.tweets_localization))
+            avancement_map += 1
         except ConnectionError:
             print(f'Une erreur de connection est survenue lors de la création de la carte avec la localisation '
                   f'suivante: {location}')
-            i += 1
+            avancement_map += 1
         except TimeoutError:
             print(f'Une erreur de type Timeout est survenue lors de la création de la carte avec la localisation '
                   f'suivante: {location}')
-            i += 1
+            avancement_map += 1
         except geopy.exc.GeocoderUnavailable:
             print(f'Une erreur est survenue lors de la création de la carte avec la localisation '
                   f'suivante: {location}. Soit la connexion n\'a pas pu être établis avec le service de géolocalisation'
@@ -423,7 +427,7 @@ def world_map():
         except Exception as error:
             print(f'Une erreur de type {type(error)}est survenue lors de la création de la carte avec la localisation '
                   f'suivante: {location}')
-            i += 1
+            avancement_map += 1
 
     tweet_counts = Counter(Tweet.tweets_localization)
     m = folium.Map()
@@ -449,6 +453,7 @@ def world_map():
     m.save('tweet_map.html')
     fin = time.time()
     print('temps final:', fin - debut)
+    fin_map = 1
 
 
 def visualize_tweet_time():
@@ -472,100 +477,109 @@ def start():
         analyze_file: gr.File(visible=False),
         analysis: gr.Radio(visible=True)
     }
-    
-def change_r(choice:str):
+
+
+def change_r(choice: str):
     if choice == Radio_Choices[-1]:
-        return {plot : gr.Plot(visible = False),
-        top: gr.Dropdown(visible=False),
-        act : gr.Dropdown(visible = False),
-        publi : gr.Dropdown(visible=False),
-        others : gr.Dropdown(visible=False)}
+        return {plot: gr.Plot(visible=False),
+                top: gr.Dropdown(visible=False),
+                act: gr.Dropdown(visible=False),
+                publi: gr.Dropdown(visible=False),
+                others: gr.Dropdown(visible=False)}
 
     if choice == Radio_Choices[0]:
         return {top: gr.Dropdown(visible=True),
-        act : gr.Dropdown(visible = False),
-        publi : gr.Dropdown(visible=False),
-        others : gr.Dropdown(visible=False),
-        plot : gr.Plot(visible = False)}
+                act: gr.Dropdown(visible=False),
+                publi: gr.Dropdown(visible=False),
+                others: gr.Dropdown(visible=False),
+                plot: gr.Plot(visible=False)}
 
     if choice == Radio_Choices[1]:
-        return {act : gr.Dropdown(visible = True),
-        top: gr.Dropdown(visible=False),
-        publi : gr.Dropdown(visible=False),
-        others : gr.Dropdown(visible=False),
-        plot : gr.Plot(visible = False)}
+        return {act: gr.Dropdown(visible=True),
+                top: gr.Dropdown(visible=False),
+                publi: gr.Dropdown(visible=False),
+                others: gr.Dropdown(visible=False),
+                plot: gr.Plot(visible=False)}
 
     if choice == Radio_Choices[2]:
-        return {publi : gr.Dropdown(visible=True),
-        top: gr.Dropdown(visible=False),
-        act : gr.Dropdown(visible = False),
-        others : gr.Dropdown(visible=False),
-        plot : gr.Plot(visible = False)}
+        return {publi: gr.Dropdown(visible=True),
+                top: gr.Dropdown(visible=False),
+                act: gr.Dropdown(visible=False),
+                others: gr.Dropdown(visible=False),
+                plot: gr.Plot(visible=False)}
 
     if choice == Radio_Choices[3]:
-        return {others : gr.Dropdown(visible=True),
-        top: gr.Dropdown(visible=False),
-        act : gr.Dropdown(visible = False),
-        publi : gr.Dropdown(visible=False),
-        plot : gr.Plot(visible = False)}
+        return {others: gr.Dropdown(visible=True),
+                top: gr.Dropdown(visible=False),
+                act: gr.Dropdown(visible=False),
+                publi: gr.Dropdown(visible=False),
+                plot: gr.Plot(visible=False)}
 
-def change_top(choice:str):
+
+def change_top(choice: str):
     if choice == "Top hashtags":
-        return {plot: gr.Plot(value=get_top(list_used = Tweet.used_hashtag_sorted,k=10), visible=True)}
+        return {plot: gr.Plot(value=get_top(list_used=Tweet.used_hashtag_sorted, k=10), visible=True)}
     if choice == "Top utilisateurs":
-        return {plot : gr.Plot(value=get_top(list_used= Tweet.tweets_of_users_sorted, k=10), visible=True)}
+        return {plot: gr.Plot(value=get_top(list_used=Tweet.tweets_of_users_sorted, k=10), visible=True)}
     if choice == "Top utilisateurs mentionnés":
-        return {plot : gr.Plot(value=get_top(list_used= Tweet.user_mentioned_sorted, k=10), visible=True)}
+        return {plot: gr.Plot(value=get_top(list_used=Tweet.user_mentioned_sorted, k=10), visible=True)}
     if choice == "Top topics":
-        return {plot : gr.Plot(value=get_top(list_used= Tweet.topics_sorted, k=10), visible=True)}
+        return {plot: gr.Plot(value=get_top(list_used=Tweet.topics_sorted, k=10), visible=True)}
 
-def change_act(choice:str):
+
+def change_act(choice: str):
     if choice == "Nombre de publications par utilisateur":
         pass
-        #return {plot  : gr.Plot(visible=True)} #ajouter value
+        # return {plot  : gr.Plot(visible=True)} #ajouter value
     if choice == "Tous les Tweets d'un utilisateur":
         pass
-        #return {plot  : gr.Plot(visible=True)} #ajouter value
+        # return {plot  : gr.Plot(visible=True)} #ajouter value
     if choice == "Tous les utilisateurs mentionnés par un utilisateur":
         pass
-        #return {plot  : gr.Plot(visible=True)} #ajouter value
+        # return {plot  : gr.Plot(visible=True)} #ajouter value
 
-def change_publi(choice:str):
+
+def change_publi(choice: str):
     if choice == "Nombre de publications par topic":
-        return {topic : gr.Textbox(visible=True)}
-        #return {plot  : gr.Plot(visible=True)} #ajouter value
+        return {topic: gr.Textbox(visible=True)}
+        # return {plot  : gr.Plot(visible=True)} #ajouter value
     if choice == "Nombre de publications par hashtag":
-        return {hashtag : gr.Textbox(visible=True)}
-        #return {plot  : gr.Plot(visible=True)} #ajouter value
+        return {hashtag: gr.Textbox(visible=True)}
+        # return {plot  : gr.Plot(visible=True)} #ajouter value
     if choice == "Tous les utilisateurs d'un hashtag":
-        return {hashtag : gr.Textbox(visible=True)}
-        #return {plot  : gr.Plot(visible=True)} #ajouter value
+        return {hashtag: gr.Textbox(visible=True)}
+        # return {plot  : gr.Plot(visible=True)} #ajouter value
 
-def change_hashtag(hashtag:str):
-        pass
 
-def change_topic(topic:str):
+def change_hashtag(hashtag: str):
     pass
 
-def change_others(choice:str):
+
+def change_topic(topic: str):
+    pass
+
+
+def change_others(choice: str):
     if choice == "Heures de Tweet":
         return {plot: gr.Plot(value=visualize_tweet_time(), visible=True)}
     if choice == "Polarité/Subjectivité":
         return {plot: gr.Plot(value=show_pie_chart2(), visible=True)}
     if choice == "Répartition mondiale":
-        pass
-        #return {plot  : gr.Plot(visible=True)} #ajouter value = world_map()
+        return {carte: gr.HTML(value='tweet_map.html', visible=True)}
 
-"""def change_slider(value:int):
-    val = value if value != 0 else 10 
-    return {plot: gr.Plot(value=get_top(k=value), visible=True), 
-    slider : gr.Slider(1,50,val, step=1,label="Les Top combien voulez-vous voir ?", info="Déplacez le curseur", visible=True, interactive=True)}"""
 
-Radio_Choices = ["Top (4)", 
-"Activité d'un utilisateur (3)",
-"Nb publications par catégorie (3)",
-"Autre (3)", 
-"Masquer"]
+def change_slider(value: int):
+    val = value if value != 0 else 10
+    return {plot: gr.Plot(value=get_top(k=value), visible=True),
+            slider: gr.Slider(1, 50, val, step=1, label="Les Top combien voulez-vous voir ?",
+                              info="Déplacez le curseur", visible=True, interactive=True)}
+
+
+Radio_Choices = ["Top (4)",
+                 "Activité d'un utilisateur (3)",
+                 "Nb publications par catégorie (3)",
+                 "Autre (3)",
+                 "Masquer"]
 
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
@@ -574,38 +588,50 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     analyze_file = gr.File(file_count='multiple', file_types=['.json'], interactive=True,
                            label="Sélectionnez un ou des fichiers à analyser")
     analyze_button = gr.Button(value="Lancer l'analyse")
-    
+    carte = gr.HTML(visible=False)
     analysis = gr.Radio(choices=Radio_Choices,
                         value="Masquer",
                         label="Analyses",
                         info="Que voulez-vous analyser ?",
                         visible=False,
                         interactive=True)
-    top  = gr.Dropdown(choices=["Top hashtags", "Top utilisateurs", "Top utilisateurs mentionnés", "Top topics"],
-                        label = "Top", info = "Veuillez sélectionner l'élément dont vous voulez voir le Top :", visible = False)
-    act = gr.Dropdown(choices=["Nombre de publications par utilisateur","Tous les Tweets d'un utilisateur", "Tous les utilisateurs mentionnés par un utilisateur"], 
-                        label ="Activité",info="Veuillez sélectionner l'activité que vous souhaitez observer :", visible=False)
-    publi = gr.Dropdown(choices=["Nombre de publications par topic", "Nombre de publications par hashtag", "Tous les utilisateurs d'un hashtag"], 
-                        label ="Catégories",info="Veuillez sélectionner les publications que vous voulez analyser :", visible=False)
-    others = gr.Dropdown(choices=["Heures de Tweet", "Polarité/Subjectivité", "Répartition mondiale"], 
-                        label ="Autres",info ="Veuillez sélectionner ce que vous souhaitez analyser :", visible=False)
-    
-    hashtag = gr.Textbox(info="Rentrez le hashtag", visible = False, interactive = True)
-    topic = gr.Textbox(info= "Rentrez le topic :", visible =False, interactive = True)
+    top = gr.Dropdown(choices=["Top hashtags", "Top utilisateurs", "Top utilisateurs mentionnés", "Top topics"],
+                      label="Top", info="Veuillez sélectionner l'élément dont vous voulez voir le Top :", visible=False)
+    act = gr.Dropdown(choices=["Nombre de publications par utilisateur", "Tous les Tweets d'un utilisateur",
+                               "Tous les utilisateurs mentionnés par un utilisateur"],
+                      label="Activité", info="Veuillez sélectionner l'activité que vous souhaitez observer :",
+                      visible=False)
+    publi = gr.Dropdown(choices=["Nombre de publications par topic", "Nombre de publications par hashtag",
+                                 "Tous les utilisateurs d'un hashtag"],
+                        label="Catégories", info="Veuillez sélectionner les publications que vous voulez analyser :",
+                        visible=False)
+    others = gr.Dropdown(choices=["Heures de Tweet", "Polarité/Subjectivité", "Répartition mondiale"],
+                         label="Autres", info="Veuillez sélectionner ce que vous souhaitez analyser :", visible=False)
+
+    hashtag = gr.Textbox(info="Rentrez le hashtag", visible=False, interactive=True)
+    topic = gr.Textbox(info="Rentrez le topic :", visible=False, interactive=True)
     plot = gr.Plot(visible=False)
-    #slider = gr.Slider (visible=False)
-    #slider.change(change_r,inputs=[analysis,slider],outputs=plot)
+    slider = gr.Slider (visible=False)
+    # slider.change(change_r,inputs=[analysis,slider],outputs=plot)
     analysis.change(change_r, inputs=[analysis], outputs=[top, act, publi, others, plot])
     top.change(change_top, inputs=[top], outputs=[plot])
-    act.change(change_act, inputs =[act], outputs= [plot])
-    publi.change(change_publi, inputs =[publi], outputs= [hashtag,topic])
-    others.change(change_others, inputs =[others], outputs= [plot])
+    act.change(change_act, inputs=[act], outputs=[plot])
+    publi.change(change_publi, inputs=[publi], outputs=[hashtag, topic])
+    others.change(change_others, inputs=[others], outputs=[plot])
     hashtag.change(change_hashtag, inputs=[hashtag], outputs=[plot])
     topic.change(change_topic, inputs=[topic], outputs=[plot])
     interface.load(change_r, inputs=[analysis], outputs=[plot])
     analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
 
-interface.launch()
+
+if __name__ == '__main__':
+    thread_map = threading.Thread(target=world_map)
+    thread_map.start()
+    print('pas bmloqué')
+
+
+    interface.launch()
+
 
 """world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
 # console affiche l'avancement de cette dernière"""
