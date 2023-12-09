@@ -53,6 +53,10 @@ class Tweet:
     # croissant pour améliorer le graphique de la fonction visualize_time
     nb_tweets = 0
     compass = []
+    specific_user = {}
+    specific_hashtag = {}
+    mentioned_by_user = {}
+    hashtag_by_user = {}
 
     def __init__(self, tweet: dict):
 
@@ -176,10 +180,22 @@ class Tweet:
             list_car = self.mention
             used_car = Tweet.user_mentioned
             name_car = re.findall(r'@\w+', txt)
+            specific = Tweet.specific_user
+            for user in name_car:
+                try:
+                    Tweet.mentioned_by_user[self.author].append(user)
+                except KeyError:
+                    Tweet.mentioned_by_user[self.author] = [user]
         elif car == "#":  # si on veut extraire les hashtags utilisés
             list_car = self.hashtag
             used_car = Tweet.used_hashtag
             name_car = re.findall(r'#\w+', txt)
+            specific = Tweet.specific_hashtag
+            for hashtag in name_car:
+                try:
+                    Tweet.hashtag_by_user[hashtag].append(self.author)
+                except KeyError:
+                    Tweet.hashtag_by_user[hashtag] = [self.author]
         else:
             return f'Le caractère {car} ne correspond ni aux hashtags ni aux mentions'
         for element in name_car:
@@ -188,6 +204,10 @@ class Tweet:
                 used_car[element] += 1
             else:
                 used_car[element] = 1
+            if element in specific:
+                specific[element].append(txt)
+            else:
+                specific[element] = [txt]
 
     def analyze_sentiment(self):
         """Fonction qui analyse le sentiment d'un tweet (négatif, neutre ou positif)
@@ -258,6 +278,30 @@ class Tweet:
             Tweet.tweets_of_users[self.author] = [self.texte]
 
 
+def user_mention_specific_hashtag(hashtag: str):
+    if hashtag[0] != '#':
+        hashtag = '#' + hashtag
+    try:
+        i = 1
+        for utilisateur in Tweet.hashtag_by_user[hashtag]:
+            print(f'Utilisateur n°{i} utilisant {hashtag}: {utilisateur}')
+            i += 1
+    except KeyError:
+        print(f'{hashtag} n\'a jamais été utilisé')
+
+
+def users_mention_by_user(user: str):
+    if user[0] != '@':
+        user = '@' + user
+    try:
+        i = 1
+        for utilisateur in Tweet.mentioned_by_user[user]:
+            print(f'Utilisateur n°{i} mentionné par {user}: {utilisateur}')
+            i += 1
+    except KeyError:
+        print(f'{user} n\'a jamais mentionné ou tweeté')
+
+
 def get_top(list_used=Tweet.used_hashtag_sorted, k=10):
     """Top k hashtags ou Top k utilisateurs mentionnés
 
@@ -310,6 +354,25 @@ def get_top(list_used=Tweet.used_hashtag_sorted, k=10):
     fig = px.bar(df, x=x_label, y=y_label, text=y_label, title=f'Top {k} des {top}s',
                  labels={x_label: x_label, y_label: y_label})
     return fig
+
+
+def mention_specific(list_used: dict, mention: str):
+    if list_used == Tweet.specific_user:
+        i = 1
+        try:
+            for tweet in list_used[mention]:
+                print(f'Tweet n°{i} mentionnant {mention}:\n{tweet}')
+                i += 1
+        except KeyError:
+            print('Cet utilisateur n\'a jamais été mentionné')
+    elif list_used == Tweet.specific_hashtag:
+        i = 1
+        try:
+            for tweet in list_used[mention]:
+                print(f'Tweet n°{i} utilisant {mention}:\n{tweet}')
+                i += 1
+        except KeyError:
+            print('Ce hashtag n\'a jamais été utilisé')
 
 
 def number_hashtag(hashtag: str):
