@@ -35,17 +35,24 @@ InPoDA est une plateforme fictive pour l’analyse de données de réseaux socia
 
 ## Dépendances
 
-    pip install textblob matplotlib folium geopy regex plotly pillow emoji
+    pip install json time geopy textblob folium plotly pandas emoji gradio regex
 
-- textblob: Pour l'analyse de sentiment.
-- matplotlib: Pour la création de graphiques.
-- folium: Pour la création de cartes géographiques.
-- geopy: Pour la géolocalisation des tweets.
-- regex: Pour les opérations sur les expressions régulières.
-- plotly: Pour la visualisation de données.
-- tkinter: Pour l'interface graphique.
-- Pillow (PIL): Pour le traitement des images.
-- emoji: Pour la gestion des emojis dans les tweets.
+- json (js) : Pour le traitement des données au format JSON.
+- time : Pour la gestion du temps et des délais.
+- geopy.exc : Pour la gestion des exceptions dans les fonctionnalités de géolocalisation.
+- TextBlob (de la bibliothèque textblob) : Pour l'analyse de texte et le traitement du langage naturel.
+- random : Pour la génération de nombres aléatoires.
+- folium : Pour la création de cartes interactives.
+- Counter (de la bibliothèque collections) : Pour le comptage d'éléments itérables.
+- Nominatim (de la bibliothèque geopy.geocoders) : Pour la géocodification et la recherche de coordonnées à partir d'adresses.
+- regex (re) : Pour les expressions régulières.
+- plotly.express (px) : Pour la création de visualisations interactives.
+- pandas (pd) : Pour la manipulation et l'analyse de données.
+- os : Pour les fonctionnalités liées au système d'exploitation.
+- emoji : Pour la gestion des émojis.
+- gradio : Pour la création d'interfaces utilisateur interactives.
+- operator : Pour les opérations sur les opérateurs en Python.
+- threading : Pour la gestion des threads et le multithreading.
 
 ## Fonctionnalités Principales
 
