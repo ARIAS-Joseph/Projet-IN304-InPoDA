@@ -566,36 +566,16 @@ def change_r(choice: str):
     if choice == Radio_Choices[-1]:
         return {plot: gr.Plot(visible=False),
                 top: gr.Dropdown(visible=False),
-                act: gr.Dropdown(visible=False),
-                publi: gr.Dropdown(visible=False),
                 others: gr.Dropdown(visible=False)}
 
     if choice == Radio_Choices[0]:
         return {top: gr.Dropdown(visible=True),
-                act: gr.Dropdown(visible=False),
-                publi: gr.Dropdown(visible=False),
                 others: gr.Dropdown(visible=False),
                 plot: gr.Plot(visible=False)}
 
     if choice == Radio_Choices[1]:
-        return {act: gr.Dropdown(visible=True),
-                top: gr.Dropdown(visible=False),
-                publi: gr.Dropdown(visible=False),
-                others: gr.Dropdown(visible=False),
-                plot: gr.Plot(visible=False)}
-
-    if choice == Radio_Choices[2]:
-        return {publi: gr.Dropdown(visible=True),
-                top: gr.Dropdown(visible=False),
-                act: gr.Dropdown(visible=False),
-                others: gr.Dropdown(visible=False),
-                plot: gr.Plot(visible=False)}
-
-    if choice == Radio_Choices[3]:
         return {others: gr.Dropdown(visible=True),
                 top: gr.Dropdown(visible=False),
-                act: gr.Dropdown(visible=False),
-                publi: gr.Dropdown(visible=False),
                 plot: gr.Plot(visible=False)}
 
 
@@ -610,7 +590,7 @@ def change_top(choice: str):
         return {plot: gr.Plot(value=get_top(list_used=Tweet.topics_sorted, k=10), visible=True)}
 
 
-def change_act(choice: str):
+"""def change_act(choice: str):
     if choice == "Nombre de publications par utilisateur":
         return {publi_user: gr.Textbox(value=number_publication("@Martin"), visible=True)}
     if choice == "Tous les Tweets d'un utilisateur":
@@ -630,16 +610,7 @@ def change_publi(choice: str):
         # return {plot  : gr.Plot(visible=True)} #ajouter value
     if choice == "Tous les utilisateurs d'un hashtag":
         return {hashtag: gr.Textbox(visible=True)}
-        # return {plot  : gr.Plot(visible=True)} #ajouter value
-
-
-def change_hashtag(hashtag: str):
-    pass
-
-
-def change_topic(topic: str):
-    pass
-
+        # return {plot  : gr.Plot(visible=True)} #ajouter value"""
 
 def change_others(choice: str):
     if choice == "Heures de Tweet":
@@ -650,11 +621,11 @@ def change_others(choice: str):
         return {carte: gr.HTML(value='tweet_map.html', visible=True)}
 
 
-def change_slider(value: int):
+"""def change_slider(value: int):
     val = value if value != 0 else 10
     return {plot: gr.Plot(value=get_top(k=value), visible=True),
             slider: gr.Slider(1, 50, val, step=1, label="Les Top combien voulez-vous voir ?",
-                              info="Déplacez le curseur", visible=True, interactive=True)}
+                              info="Déplacez le curseur", visible=True, interactive=True)}"""
 
 
 def upload_file(file):
@@ -664,9 +635,7 @@ def upload_file(file):
 
 
 Radio_Choices = ["Top (4)",
-                 "Activité d'un utilisateur (3)",
-                 "Nb publications par catégorie (3)",
-                 "Autre (3)",
+                 "Caractéristiques (3)",
                  "Masquer"]
 
 with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
@@ -686,14 +655,14 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
                         interactive=True)
     top = gr.Dropdown(choices=["Top hashtags", "Top utilisateurs", "Top utilisateurs mentionnés", "Top topics"],
                       label="Top", info="Veuillez sélectionner l'élément dont vous voulez voir le Top :", visible=False)
-    act = gr.Dropdown(choices=["Nombre de publications par utilisateur", "Tous les Tweets d'un utilisateur",
+    """act = gr.Dropdown(choices=["Nombre de publications par utilisateur", "Tous les Tweets d'un utilisateur",
                                "Tous les utilisateurs mentionnés par un utilisateur"],
                       label="Activité", info="Veuillez sélectionner l'activité que vous souhaitez observer :",
                       visible=False)
     publi = gr.Dropdown(choices=["Nombre de publications par topic", "Nombre de publications par hashtag",
                                  "Tous les utilisateurs d'un hashtag"],
                         label="Catégories", info="Veuillez sélectionner les publications que vous voulez analyser :",
-                        visible=False)
+                        visible=False)"""
     others = gr.Dropdown(choices=["Heures de Tweet", "Polarité/Subjectivité", "Répartition mondiale"],
                          label="Autres", info="Veuillez sélectionner ce que vous souhaitez analyser :", visible=False)
 
@@ -703,13 +672,13 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     slider = gr.Slider (visible=False)
     publi_user = gr.Textbox(info="Quel utilisateur ?", visible=False)
     # slider.change(change_r,inputs=[analysis,slider],outputs=plot)
-    analysis.change(change_r, inputs=[analysis], outputs=[top, act, publi, others, plot])
+    analysis.change(change_r, inputs=[analysis], outputs=[top, others, plot])
     top.change(change_top, inputs=[top], outputs=[plot])
-    act.change(change_act, inputs=[act], outputs=[publi_user])
-    publi.change(change_publi, inputs=[publi], outputs=[hashtag, topic])
+    """act.change(change_act, inputs=[act], outputs=[publi_user])
+    publi.change(change_publi, inputs=[publi], outputs=[hashtag, topic])"""
     others.change(change_others, inputs=[others], outputs=[plot])
-    hashtag.change(change_hashtag, inputs=[hashtag], outputs=[plot])
-    topic.change(change_topic, inputs=[topic], outputs=[plot])
+    """hashtag.change(change_hashtag, inputs=[hashtag], outputs=[plot])
+    topic.change(change_topic, inputs=[topic], outputs=[plot])"""
     interface.load(change_r, inputs=[analysis], outputs=[plot])
     analyze_button.click(start, outputs=[welcome_label, upload_file_button, analyze_button, analysis])
     upload_file_button.click(upload_file, outputs=[welcome_label, upload_file_button, analyze_button, analysis])
