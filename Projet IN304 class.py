@@ -715,16 +715,16 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     upload_file_button.click(upload_file, outputs=[welcome_label, upload_file_button, analyze_button, analysis])
 
 
-def get_password(length):
-    """Générer une chaîne aléatoire de longueur fixe"""
+"""def get_password(length):
+    #Générer une chaîne aléatoire de longueur fixe
     str = string.ascii_lowercase
-    return ''.join(random.choice(str) for _ in range(length))
+    return ''.join(random.choice(str) for _ in range(length))"""
 
 
 if __name__ == '__main__':
-    thread_map = threading.Thread(target=world_map)
+    """thread_map = threading.Thread(target=world_map)
     thread_map.start()
-    Tweet.instantiate_from_file('aitweets.json')
+    Tweet.instantiate_from_file('aitweets.json')"""
     """thread_map = []
     for i in range(0, len(Tweet.tweets_localization), 100):
         print('création du thread', i % 100)
