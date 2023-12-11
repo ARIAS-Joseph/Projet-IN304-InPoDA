@@ -25,6 +25,7 @@ import emoji
 import gradio as gr
 import operator
 import threading
+import string
 
 avancement_map = 0
 fin_map = 0
@@ -468,18 +469,20 @@ def show_pie_chart2():
     return fig
 
 
-def world_map():
+def world_map(start=0, end=0, user='Géolocalisation_tweet'):
     print('World Map')
     global fin_map
     global avancement_map
     global analyse_finished
     while analyse_finished != 1:
         time.sleep(1)
+    if end == 0:
+        end = len(Tweet.tweets_localization)
     debut = time.time()
-    geolocator = Nominatim(user_agent="Géolocalisation_tweets")
+    geolocator = Nominatim(user_agent=user)
     tweet_coordinates = {}
     avancement_map = 1
-    for location in Tweet.tweets_localization:
+    for location in Tweet.tweets_localization[start:end]:
         try:
             location = location.strip()
             if location not in tweet_coordinates:
@@ -501,6 +504,8 @@ def world_map():
             print(f'Une erreur est survenue lors de la création de la carte avec la localisation '
                   f'suivante: {location}. Soit la connexion n\'a pas pu être établis avec le service de géolocalisation'
                   f' soit le service n\'est pas disponible')
+        except geopy.exc.GeocoderQuotaExceeded:
+            pass
         except Exception as error:
             print(f'Une erreur de type {type(error)}est survenue lors de la création de la carte avec la localisation '
                   f'suivante: {location}')
@@ -607,8 +612,7 @@ def change_top(choice: str):
 
 def change_act(choice: str):
     if choice == "Nombre de publications par utilisateur":
-        pass
-        # return {plot  : gr.Plot(visible=True)} #ajouter value
+        return {publi_user: gr.Textbox(value=number_publication("@Martin"), visible=True)}
     if choice == "Tous les Tweets d'un utilisateur":
         pass
         # return {plot  : gr.Plot(visible=True)} #ajouter value
@@ -697,10 +701,11 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     topic = gr.Textbox(info="Rentrez le topic :", visible=False, interactive=True)
     plot = gr.Plot(visible=False)
     slider = gr.Slider (visible=False)
+    publi_user = gr.Textbox(info="Quel utilisateur ?", visible=False)
     # slider.change(change_r,inputs=[analysis,slider],outputs=plot)
     analysis.change(change_r, inputs=[analysis], outputs=[top, act, publi, others, plot])
     top.change(change_top, inputs=[top], outputs=[plot])
-    act.change(change_act, inputs=[act], outputs=[plot])
+    act.change(change_act, inputs=[act], outputs=[publi_user])
     publi.change(change_publi, inputs=[publi], outputs=[hashtag, topic])
     others.change(change_others, inputs=[others], outputs=[plot])
     hashtag.change(change_hashtag, inputs=[hashtag], outputs=[plot])
@@ -710,22 +715,25 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     upload_file_button.click(upload_file, outputs=[welcome_label, upload_file_button, analyze_button, analysis])
 
 
+def get_password(length):
+    """Générer une chaîne aléatoire de longueur fixe"""
+    str = string.ascii_lowercase
+    return ''.join(random.choice(str) for _ in range(length))
+
+
 if __name__ == '__main__':
     thread_map = threading.Thread(target=world_map)
     thread_map.start()
-    """Tweet.instantiate_from_file('aitweets.json')
-    thread_map = []
+    Tweet.instantiate_from_file('aitweets.json')
+    """thread_map = []
     for i in range(0, len(Tweet.tweets_localization), 100):
-        print('création du thread', i%100)
+        print('création du thread', i % 100)
         end = min(i + 100,
                   len(Tweet.tweets_localization))  # Assurez-vous que la fin ne dépasse pas la longueur de la liste
-        t = threading.Thread(target=world_map, args=(i, end))
+        t = threading.Thread(target=world_map, args=(i, end, get_password(10)))
         thread_map.append(t)
-        t.start()"""
-
-    """# Démarrer tous les threads
-    for thread in thread_map:
-        thread.start()"""
+        t.start()
+        time.sleep(random.randint(1,5))"""
 
     interface.launch()
 
