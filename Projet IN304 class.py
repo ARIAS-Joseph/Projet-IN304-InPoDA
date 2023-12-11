@@ -29,6 +29,7 @@ import threading
 avancement_map = 0
 fin_map = 0
 analyse_finished = 0
+file_path = ''
 
 
 class Tweet:
@@ -543,6 +544,7 @@ def visualize_tweet_time():
 
 
 def start():
+    global file_path
     """print(file)
     interface_init.close()
     interface.launch()"""
@@ -550,7 +552,7 @@ def start():
     return {
         welcome_label: gr.Label(visible=False),
         analyze_button: gr.Button(visible=False),
-        analyze_file: gr.File(visible=False),
+        upload_file_button: gr.UploadButton(visible=False),
         analysis: gr.Radio(visible=True)
     }
 
@@ -650,6 +652,13 @@ def change_slider(value: int):
             slider: gr.Slider(1, 50, val, step=1, label="Les Top combien voulez-vous voir ?",
                               info="Déplacez le curseur", visible=True, interactive=True)}
 
+
+def upload_file(file):
+    global file_path
+    file_path = file
+    start()
+
+
 Radio_Choices = ["Top (4)",
                  "Activité d'un utilisateur (3)",
                  "Nb publications par catégorie (3)",
@@ -660,9 +669,10 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
     welcome_label = gr.Label(label="Bonjour", value="Bienvenue sur InPoDa, la plateforme d'analyse de données de"
                                                     "réseaux sociaux.\nVeuillez choisir un fichier à analyser")
-    analyze_file = gr.File(file_count='multiple', file_types=['.json'], interactive=True,
-                           label="Sélectionnez un ou des fichiers à analyser")
-    analyze_button = gr.Button(value="Lancer l'analyse")
+    #file_output = gr.File()
+    upload_file_button = gr.UploadButton("Cliquez pour choisir le fichier à analyser",
+                                         file_types=[".json"], file_count="single", visible=False)
+    analyze_button = gr.Button(value="Lancer l'analyse", visible=True)
     carte = gr.HTML(visible=False)
     analysis = gr.Radio(choices=Radio_Choices,
                         value="Masquer",
@@ -696,12 +706,26 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     hashtag.change(change_hashtag, inputs=[hashtag], outputs=[plot])
     topic.change(change_topic, inputs=[topic], outputs=[plot])
     interface.load(change_r, inputs=[analysis], outputs=[plot])
-    analyze_button.click(start, outputs=[welcome_label, analyze_file, analyze_button, analysis])
+    analyze_button.click(start, outputs=[welcome_label, upload_file_button, analyze_button, analysis])
+    upload_file_button.click(upload_file, outputs=[welcome_label, upload_file_button, analyze_button, analysis])
 
 
 if __name__ == '__main__':
     thread_map = threading.Thread(target=world_map)
     thread_map.start()
+    """Tweet.instantiate_from_file('aitweets.json')
+    thread_map = []
+    for i in range(0, len(Tweet.tweets_localization), 100):
+        print('création du thread', i%100)
+        end = min(i + 100,
+                  len(Tweet.tweets_localization))  # Assurez-vous que la fin ne dépasse pas la longueur de la liste
+        t = threading.Thread(target=world_map, args=(i, end))
+        thread_map.append(t)
+        t.start()"""
+
+    """# Démarrer tous les threads
+    for thread in thread_map:
+        thread.start()"""
 
     interface.launch()
 
