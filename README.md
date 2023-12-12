@@ -27,7 +27,7 @@ Joseph ARIAS (Contact: joseph.arias@ens.uvsq.fr)
 
 ## Statut du Projet
 
-En cours de développement
+Projet rendu le 12 décembre 2023
 
 ## Description du Projet
 
@@ -35,44 +35,51 @@ InPoDA est une plateforme fictive pour l’analyse de données de réseaux socia
 
 ## Dépendances
 
-    pip install textblob matplotlib folium geopy regex plotly pillow emoji
+    pip install json time geopy textblob folium plotly pandas emoji gradio regex
 
-- textblob: Pour l'analyse de sentiment.
-- matplotlib: Pour la création de graphiques.
-- folium: Pour la création de cartes géographiques.
-- geopy: Pour la géolocalisation des tweets.
-- regex: Pour les opérations sur les expressions régulières.
-- plotly: Pour la visualisation de données.
-- tkinter: Pour l'interface graphique.
-- Pillow (PIL): Pour le traitement des images.
-- emoji: Pour la gestion des emojis dans les tweets.
+- json (js) : Pour le traitement des données au format JSON.
+- time : Pour la gestion du temps et des délais.
+- geopy.exc : Pour la gestion des exceptions dans les fonctionnalités de géolocalisation.
+- TextBlob (de la bibliothèque textblob) : Pour l'analyse de texte et le traitement du langage naturel.
+- random : Pour la génération de nombres aléatoires.
+- folium : Pour la création de cartes interactives.
+- Counter (de la bibliothèque collections) : Pour le comptage d'éléments itérables.
+- Nominatim (de la bibliothèque geopy.geocoders) : Pour la géocodification et la recherche de coordonnées à partir d'adresses.
+- regex (re) : Pour les expressions régulières.
+- plotly.express (px) : Pour la création de visualisations interactives.
+- pandas (pd) : Pour la manipulation et l'analyse de données.
+- os : Pour les fonctionnalités liées au système d'exploitation.
+- emoji : Pour la gestion des émojis.
+- gradio : Pour la création d'interfaces utilisateur interactives.
+- operator : Pour les opérations sur les opérateurs en Python.
+- threading : Pour la gestion des threads et le multithreading.
 
 ## Fonctionnalités Principales
 
 Extraction des Informations des Tweets:
--Extraction des hashtags, utilisateurs mentionnés, auteur de la publication, le nombre de publication d'un auteur
--Analyse de sentiment (positif, neutre, négatif).
--Analyse de l'objectivité des tweets.
+- Extraction des hashtags, utilisateurs mentionnés, auteur de la publication, le nombre de publication d'un auteur
+- Analyse de sentiment (positif, neutre, négatif).
+- Analyse de l'objectivité des tweets.
 
 Visualisation des Données:
--Top k hashtags, k utilisateurs mentionnés, et k utilisateurs ayant posté le plus de tweets.
--Nombre de publications pour un hashtag donné.
--Affichage des tweets d'un utilisateur spécifique.
+- Top k hashtags, k utilisateurs mentionnés, et k utilisateurs ayant posté le plus de tweets.
+- Nombre de publications pour un hashtag donné.
+- Affichage des tweets d'un utilisateur spécifique.
 
 Graphiques Statistiques:
--Graphiques représentant la polarité et l'objectivité des tweets.
--Carte mondiale indiquant les lieux où les tweets ont été postés.
--Visualisation du nombre de tweets par heure.
+- Graphiques représentant la polarité et l'objectivité des tweets.
+- Carte mondiale indiquant les lieux où les tweets ont été postés.
+- Visualisation du nombre de tweets par heure.
 
 Interface Utilisateur:
--Interface graphique permettant de charger un fichier JSON contenant des tweets.
--Affichage des résultats dans la console.
+- Interface graphique permettant de charger un fichier JSON contenant des tweets.
+- Affichage des résultats dans la console.
 
 ## Remarques Importantes:
 
--La fonction world_map nécessite une connexion internet pour fonctionner.
--La fonction world_map() prend du temps à s'exécuter en raison de la géolocalisation des tweets.
+- La fonction world_map nécessite une connexion internet pour fonctionner.
+- La fonction world_map() prend du temps à s'exécuter en raison de la géolocalisation des tweets (3 tweets géolocalisés par seconde environ).
 
 ## Avenir du Projet
 
-Le projet est en cours de développement jusqu'en décembre 2023, et des fonctionnalités supplémentaires ainsi que des améliorations sont à prévoir. Votre contribution est la bienvenue (report de bug, propositions de fonctionnalités,...) !
+La version finale du projet a été rendue le 12 décembre 2023. Plus aucune mis à jour ne sera faite. Cependant il est toujours possible de contacter le mainteneur pour toute question relative au projet.
