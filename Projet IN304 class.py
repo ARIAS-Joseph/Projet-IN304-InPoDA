@@ -25,7 +25,6 @@ import emoji
 import gradio as gr
 import operator
 import threading
-import plotly.graph_objects as go
 
 avancement_map = 0
 fin_map = 0
@@ -62,7 +61,7 @@ class Tweet:
     retweets = {}
     retweets_sorted = []
     languages = {}
-    languages_sorted= []
+    languages_sorted = []
 
     def __init__(self, tweet: dict):
 
@@ -102,6 +101,11 @@ class Tweet:
                 self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du
                 # tweet
                 self.analyse_language()
+                tweet['Polarity'] = self.polarity
+                tweet['Subjectivity'] = self.subjectivity
+                tweet['Topics'] = self.topics
+                tweet['Mentions'] = self.mention
+                tweet['Hashtags'] = self.hashtag
                 if self.localization != "":
                     Tweet.tweets_localization.append(self.localization)
                 Tweet.tweets_time[self.date[11:13]] += 1
@@ -112,6 +116,8 @@ class Tweet:
         """ Fonction qui instancie les tweets présents dans un fichier json
         """
         global analyse_finished
+        if filepath == '':
+            filepath = 'aitweets.json'
         data = open(filepath, 'r', encoding='UTF-8')
         list_tweets = [js.loads(line) for line in data]
 
@@ -128,14 +134,9 @@ class Tweet:
 
         for i in range(len(list_tweets)):
             list_tweets[i]['Author'] = random.choice(users_names)
-
-        file = Tweet.fill_zone_atterrissage(filepath, list_tweets)
-        data = open(file, 'r', encoding='UTF-8')
-        list_tweets = [js.loads(line) for line in data]
         for tweet in list_tweets:
             Tweet(tweet)
-
-        data.close()
+        Tweet.fill_zone_atterrissage(filepath, list_tweets)
 
         Tweet.used_hashtag_sorted = sorted(Tweet.used_hashtag.items(),
                                            key=operator.itemgetter(1), reverse=True)  # création d'une liste
@@ -179,39 +180,25 @@ class Tweet:
         open(f'zone_atterrissage_{name}.json', "w").close()
 
     def analyse_language(self):
-        if self.langue == 'en':
-            self.langue = 'anglais'
-        elif self.langue == 'fr':
-            self.langue = 'français'
-        elif self.langue == 'und':
-            self.langue = ''
-            return
-        elif self.langue == 'ja':
-            self.langue = 'japonais'
-        elif self.langue == 'es':
-            self.langue = 'espagnol'
-        elif self.langue == 'da':
-            self.langue = 'danois'
-        elif self.langue == 'ro':
-            self.langue = 'roumain'
-        elif self.langue == 'pt':
-            self.langue = 'portugais'
-        elif self.langue == 'ko':
-            self.langue = 'coréen'
-        elif self.langue == 'de':
-            self.langue = 'allemand'
-        elif self.langue == 'in':
-            self.langue = 'maori'
-        elif self.langue == 'it':
-            self.langue = 'italien'
-        elif self.langue == 'ar':
-            self.langue = 'arabe'
-        elif self.langue == 'fa':
-            self.langue = 'persan'
-        elif self.langue == 'ca':
-            self.langue = 'catalan'
-        elif self.langue == 'fi':
-            self.langue = 'finnois'
+        langue_correspondance = {
+            'en': 'anglais',
+            'fr': 'français',
+            'und': '',
+            'ja': 'japonais',
+            'es': 'espagnol',
+            'da': 'danois',
+            'ro': 'roumain',
+            'pt': 'portugais',
+            'ko': 'coréen',
+            'de': 'allemand',
+            'in': 'maori',
+            'it': 'italien',
+            'ar': 'arabe',
+            'fa': 'persan',
+            'ca': 'catalan',
+            'fi': 'finnois'
+        }
+        self.langue = langue_correspondance[self.langue]
         try:
             Tweet.languages[self.langue] += 1
         except KeyError:
@@ -312,9 +299,19 @@ class Tweet:
         for hashtag in self.hashtag:
             hashtag = hashtag[1::].lower()
             for topic in equivalence:
-                if hashtag in equivalence[topic] or self.texte.lower() in equivalence[topic]:
+                if hashtag in equivalence[topic]:
                     hashtag = topic
-            self.topics.append(hashtag)
+                    self.topics.append(hashtag)
+
+        for word in self.texte.split():
+            word = word.lower()
+            for topic in equivalence:
+                if word in equivalence[topic]:
+                    word = topic
+                    self.topics.append(word)
+
+        self.topics = list(set(self.topics))
+
         for topic in self.topics:
             if topic in Tweet.topics:
                 Tweet.topics[topic] += 1
@@ -622,7 +619,7 @@ def start():
     """print(file)
     interface_init.close()
     interface.launch()"""
-    Tweet.instantiate_from_file()
+    Tweet.instantiate_from_file(file_path)
     return {
         welcome_label: gr.Label(visible=False),
         analyze_button: gr.Button(visible=False),
@@ -755,7 +752,7 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
 
 
 if __name__ == '__main__':
-    Tweet.instantiate_from_file('aitweets.json')
+    #Tweet.instantiate_from_file('aitweets.json')
     thread_map = threading.Thread(target=world_map)
     thread_map.start()
 
