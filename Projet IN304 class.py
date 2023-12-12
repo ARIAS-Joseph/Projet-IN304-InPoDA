@@ -154,7 +154,8 @@ class Tweet:
         Tweet.topics_sorted = sorted(Tweet.topics.items(), key=operator.itemgetter(1), reverse=True)
         Tweet.retweets_sorted = sorted(Tweet.retweets.items(), key=operator.itemgetter(1), reverse=True)
         Tweet.languages_sorted = sorted(Tweet.languages.items(), key=operator.itemgetter(1), reverse=True)
-        print(Tweet.languages_sorted)
+        Tweet.hashtag_by_user = list(set(Tweet.hashtag_by_user))
+        Tweet.mentioned_by_user = list(set(Tweet.mentioned_by_user))
 
         analyse_finished = 1
 
