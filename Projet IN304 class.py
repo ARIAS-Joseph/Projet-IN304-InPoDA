@@ -25,7 +25,7 @@ import emoji
 import gradio as gr
 import operator
 import threading
-import string
+import plotly.graph_objects as go
 
 avancement_map = 0
 fin_map = 0
@@ -59,6 +59,10 @@ class Tweet:
     specific_hashtag = {}
     mentioned_by_user = {}
     hashtag_by_user = {}
+    retweets = {}
+    retweets_sorted = []
+    languages = {}
+    languages_sorted= []
 
     def __init__(self, tweet: dict):
 
@@ -80,7 +84,7 @@ class Tweet:
                 self.id = tweet['id']
                 self.localization = tweet['AuthorLocation']
                 self.date = tweet['CreatedAt']
-                self.rt = tweet['RetweetCount']
+                self.rt = int(tweet['RetweetCount'])
                 self.langue = tweet['TweetLanguage']
                 self.texte = tweet['TweetText']
                 self.hashtag = tweet['Hashtags']
@@ -89,6 +93,7 @@ class Tweet:
                 self.subjectivity = tweet['Subjectivity']
                 self.topics = tweet['Topics']
                 self.author = tweet['Author']
+                Tweet.retweets[self.texte] = self.rt
                 self.extract_car('#')  # extraction des hashtags utilisés dans le tweet
                 self.extract_car('@')  # extraction des utilisateurs mentionnés dans le tweet
                 self.analyze_sentiment()  # analyse du sentiment du tweet (négatif, neutre ou positif) et la
@@ -96,20 +101,7 @@ class Tweet:
                 self.extract_topics()  # extraction des topics du tweet
                 self.list_tweet_by_author()  # ajout du tweet au dictionnaire tweets_of_users avec en clé l'auteur du
                 # tweet
-                Tweet.used_hashtag_sorted = sorted(Tweet.used_hashtag.items(),
-                                                   key=operator.itemgetter(1), reverse=True)  # création d'une liste
-                # des hashtags présents dans les tweets analysés triée par ordre décroissant du nombre d'apparitions du
-                # hashtag
-                Tweet.user_mentioned_sorted = sorted(Tweet.user_mentioned.items(),
-                                                     key=operator.itemgetter(1),
-                                                     reverse=True)  # création d'une liste
-                # des utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mentions
-                # de l'utilisateur
-                Tweet.tweets_of_users_sorted = dict(sorted(Tweet.tweets_of_users.items(), key=lambda x: len(x[1]),
-                                                           reverse=True))  # création d'une liste des utilisateurs triée
-                # par ordre décroissant du nombre de tweets de l'utilisateur
-                Tweet.tweets_users = [(key, len(tweets)) for key, tweets in Tweet.tweets_of_users_sorted.items()]
-                Tweet.topics_sorted = sorted(Tweet.topics.items(), key=operator.itemgetter(1), reverse=True)
+                self.analyse_language()
                 if self.localization != "":
                     Tweet.tweets_localization.append(self.localization)
                 Tweet.tweets_time[self.date[11:13]] += 1
@@ -144,6 +136,25 @@ class Tweet:
             Tweet(tweet)
 
         data.close()
+
+        Tweet.used_hashtag_sorted = sorted(Tweet.used_hashtag.items(),
+                                           key=operator.itemgetter(1), reverse=True)  # création d'une liste
+        # des hashtags présents dans les tweets analysés triée par ordre décroissant du nombre d'apparitions du
+        # hashtag
+        Tweet.user_mentioned_sorted = sorted(Tweet.user_mentioned.items(),
+                                             key=operator.itemgetter(1),
+                                             reverse=True)  # création d'une liste
+        # des utilisateurs mentionnés dans les tweets analysés triée par ordre décroissant du nombre de mentions
+        # de l'utilisateur
+        Tweet.tweets_of_users_sorted = dict(sorted(Tweet.tweets_of_users.items(), key=lambda x: len(x[1]),
+                                                   reverse=True))  # création d'une liste des utilisateurs triée
+        # par ordre décroissant du nombre de tweets de l'utilisateur
+        Tweet.tweets_users = [(key, len(tweets)) for key, tweets in Tweet.tweets_of_users_sorted.items()]
+        Tweet.topics_sorted = sorted(Tweet.topics.items(), key=operator.itemgetter(1), reverse=True)
+        Tweet.retweets_sorted = sorted(Tweet.retweets.items(), key=operator.itemgetter(1), reverse=True)
+        Tweet.languages_sorted = sorted(Tweet.languages.items(), key=operator.itemgetter(1), reverse=True)
+        print(Tweet.languages_sorted)
+
         analyse_finished = 1
 
     @staticmethod
@@ -166,6 +177,45 @@ class Tweet:
     def reset_zone_atterrissage(name):
         """Supprime tout le text du fichier zone_atterrissage.txt."""
         open(f'zone_atterrissage_{name}.json', "w").close()
+
+    def analyse_language(self):
+        if self.langue == 'en':
+            self.langue = 'anglais'
+        elif self.langue == 'fr':
+            self.langue = 'français'
+        elif self.langue == 'und':
+            self.langue = ''
+            return
+        elif self.langue == 'ja':
+            self.langue = 'japonais'
+        elif self.langue == 'es':
+            self.langue = 'espagnol'
+        elif self.langue == 'da':
+            self.langue = 'danois'
+        elif self.langue == 'ro':
+            self.langue = 'roumain'
+        elif self.langue == 'pt':
+            self.langue = 'portugais'
+        elif self.langue == 'ko':
+            self.langue = 'coréen'
+        elif self.langue == 'de':
+            self.langue = 'allemand'
+        elif self.langue == 'in':
+            self.langue = 'maori'
+        elif self.langue == 'it':
+            self.langue = 'italien'
+        elif self.langue == 'ar':
+            self.langue = 'arabe'
+        elif self.langue == 'fa':
+            self.langue = 'persan'
+        elif self.langue == 'ca':
+            self.langue = 'catalan'
+        elif self.langue == 'fi':
+            self.langue = 'finnois'
+        try:
+            Tweet.languages[self.langue] += 1
+        except KeyError:
+            Tweet.languages[self.langue] = 1
 
     def extract_car(self, car: str):
         """Fonction qui extrait les hashtags utilisés ou les utilisateurs mentionnés dans le tweet à partir d'une base
@@ -358,6 +408,13 @@ def get_top(list_used=Tweet.used_hashtag_sorted, k=10):
     return fig
 
 
+def top_retweets(k):
+    for i in range(0, k):
+        print(
+            f"Top {i + 1} des tweets les plus retweetés :\n\"{Tweet.retweets_sorted[i][0]}\"\n avec "
+            f"{Tweet.retweets_sorted[i][1]} retweet{'s' if Tweet.retweets_sorted[i][1] > 1 else ''}\n")
+
+
 def mention_specific(list_used: dict, mention: str):
     if list_used == Tweet.specific_user:
         i = 1
@@ -417,13 +474,24 @@ def publication_author(author: str):
 
 
 def number_publication(author: str):
-
     if author[0] != '@':
         author = '@' + author
     try:
         print(f'{author} a tweeté {len(Tweet.tweets_of_users[author])} fois')
     except KeyError:
         print('Cet utilisateur n\'a pas tweeté ou n\'existe pas')
+
+
+def languages_plot(k):
+    top_k_languages = Tweet.languages_sorted[:k]  # Sélectionner les k premières langues
+
+    # Extraire les noms des langues et les compteurs
+    languages = [lang[0] for lang in top_k_languages]
+    counts = [lang[1] for lang in top_k_languages]
+
+    # Créer le graphique pie chart avec Plotly Express
+    fig = px.pie(names=languages, values=counts, title=f'Top {k} des langues les plus utilisées')
+    fig.show()
 
 
 def show_pie_chart(list_used: list):
@@ -505,7 +573,8 @@ def world_map(start=0, end=0, user='Géolocalisation_tweet'):
                   f'suivante: {location}. Soit la connexion n\'a pas pu être établis avec le service de géolocalisation'
                   f' soit le service n\'est pas disponible')
         except geopy.exc.GeocoderQuotaExceeded:
-            pass
+            print(f'Une erreur est survenue lors de la création de la carte avec la localisation suivante: {location}'
+                  f'à cause d\'un trop grand nombre de requête en un certain laps de temps.')
         except Exception as error:
             print(f'Une erreur de type {type(error)}est survenue lors de la création de la carte avec la localisation '
                   f'suivante: {location}')
@@ -612,6 +681,7 @@ def change_publi(choice: str):
         return {hashtag: gr.Textbox(visible=True)}
         # return {plot  : gr.Plot(visible=True)} #ajouter value"""
 
+
 def change_others(choice: str):
     if choice == "Heures de Tweet":
         return {plot: gr.Plot(value=visualize_tweet_time(), visible=True)}
@@ -642,7 +712,7 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     title = gr.Label(label="InPoDa", value="InPoDa", color="#00ACEE")
     welcome_label = gr.Label(label="Bonjour", value="Bienvenue sur InPoDa, la plateforme d'analyse de données de"
                                                     "réseaux sociaux.\nVeuillez choisir un fichier à analyser")
-    #file_output = gr.File()
+    # file_output = gr.File()
     upload_file_button = gr.UploadButton("Cliquez pour choisir le fichier à analyser",
                                          file_types=[".json"], file_count="single", visible=False)
     analyze_button = gr.Button(value="Lancer l'analyse", visible=True)
@@ -669,7 +739,7 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     hashtag = gr.Textbox(info="Rentrez le hashtag", visible=False, interactive=True)
     topic = gr.Textbox(info="Rentrez le topic :", visible=False, interactive=True)
     plot = gr.Plot(visible=False)
-    slider = gr.Slider (visible=False)
+    slider = gr.Slider(visible=False)
     publi_user = gr.Textbox(info="Quel utilisateur ?", visible=False)
     # slider.change(change_r,inputs=[analysis,slider],outputs=plot)
     analysis.change(change_r, inputs=[analysis], outputs=[top, others, plot])
@@ -684,27 +754,23 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
     upload_file_button.click(upload_file, outputs=[welcome_label, upload_file_button, analyze_button, analysis])
 
 
-"""def get_password(length):
-    #Générer une chaîne aléatoire de longueur fixe
-    str = string.ascii_lowercase
-    return ''.join(random.choice(str) for _ in range(length))"""
-
-
 if __name__ == '__main__':
-    """thread_map = threading.Thread(target=world_map)
+    Tweet.instantiate_from_file('aitweets.json')
+    thread_map = threading.Thread(target=world_map)
     thread_map.start()
-    Tweet.instantiate_from_file('aitweets.json')"""
+
+    # Partie qui permettrait d'accélérer le processus de world map mais qui est impossible, car geopy refuse un trop
+    # grand nombre de requêtes en un certain laps de temps. Pour régler ce problème, on pourrait essayer de passer par
+    # un API nœud de TOR avant de changer les ip
+
     """thread_map = []
     for i in range(0, len(Tweet.tweets_localization), 100):
         print('création du thread', i % 100)
         end = min(i + 100,
-                  len(Tweet.tweets_localization))  # Assurez-vous que la fin ne dépasse pas la longueur de la liste
+                  len(Tweet.tweets_localization))
         t = threading.Thread(target=world_map, args=(i, end, get_password(10)))
         thread_map.append(t)
         t.start()
         time.sleep(random.randint(1,5))"""
 
     interface.launch()
-
-"""world_map()  # cette fonction demande beaucoup de temps pour s'exécuter et dépend de la connexion internet ! La
-# console affiche l'avancement de cette dernière"""
