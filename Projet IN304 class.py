@@ -654,7 +654,7 @@ def change_top(choice: str):
     if choice == "Top utilisateurs mentionnés":
         return {plot: gr.Plot(value=get_top(list_used=Tweet.user_mentioned_sorted, k=10), visible=True)}
     if choice == "Top topics":
-        return {plot: gr.Plot(value=get_top(list_used=Tweet.topics_sorted, k=10), visible=True)}
+        return {plot: gr.Plot(value=get_top(list_used=Tweet.topics_sorted, k=4), visible=True)}
 
 
 """def change_act(choice: str):
@@ -753,7 +753,6 @@ with gr.Blocks(theme=gr.themes.Soft(neutral_hue='cyan')) as interface:
 
 
 if __name__ == '__main__':
-    #Tweet.instantiate_from_file('aitweets.json')
     thread_map = threading.Thread(target=world_map)
     thread_map.start()
 
